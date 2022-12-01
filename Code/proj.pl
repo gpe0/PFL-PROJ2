@@ -25,29 +25,21 @@ Colors:
 %drawPlace(Piece, Offset, Color).
 
 % Empty
-drawPlace(0, _, 0) :-
-    write('       |').
-
-drawPlace(0, _, 1) :-
-    write(' . . . |').
+drawPlace(0, _, 0) :- write('       |').
+drawPlace(0, _, 1) :- write(' . . . |').
 
 % Elephant
 drawPlace(1, 1, _) :- write('()o o()|').
-
 drawPlace(1, _, _) :- write('  ( )  |').
 
 % Mouse
 drawPlace(2, 1, _) :- write('| o o ||').
-
 drawPlace(2, 2, _) :- write(' \\   / |').
-
 drawPlace(2, 3, _) :- write(' -\\_/- |').
 
 % Lion
 drawPlace(3, 1, _) :- write(' @@@@@ |').
-
 drawPlace(3, 2, _) :- write('@o\\ /o@|').
-
 drawPlace(3, 3, _) :- write(' @@@@@ |').
 
 % drawLineLoop(Index, Line, Offset)
