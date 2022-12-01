@@ -3,7 +3,6 @@ drawHeader :-
     write('   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  '), nl.
 
 drawFooter :-
-    write('   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  '), nl,
     write('      A       B       C       D       E       F       G       H       I       J     '), nl.
 
 /*
@@ -83,13 +82,15 @@ drawRow(Index, Row) :-
     drawLine(Index, Row, 3).
 
 % drawRowLoop(Index, Row)
-drawRowLoop(1, [H|_]) :-
-    drawRow(1, H).
+drawRowLoop(_, []).
 drawRowLoop(Index, [H|T]) :-
     drawRow(Index, H),
     write('   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  '), nl,
     I1 is Index - 1,
     drawRowLoop(I1, T).
+
+% drawBoard(Board)
+drawBoard(Board) :- drawRowLoop(10, Board).
 
 % For now, empty hard-coded board.
 drawBoard :-
@@ -106,5 +107,5 @@ drawBoard :-
         [0, 0, 0, 0, 1, 1, 0, 0, 0, 0]
     ], Board),
     drawHeader,
-    drawRowLoop(10, Board), 
+    drawBoard(Board), 
     drawFooter.
