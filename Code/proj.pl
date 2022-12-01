@@ -13,22 +13,23 @@ Piece:
     2 - Mouse
     3 - Lion
 
-Stage:
+Offset:
     1 - Top
     2 - Mid
     2 - Bot
 
-Default:
-    1 - Empty
-    2 - With dots
+Colors:
+    0 - White
+    1 - Black (dots)
 */
 
-%drawPlace(Piece, Stage, Default).
+%drawPlace(Piece, Offset, Color).
 
-drawPlace(0, _, 1) :-
+% Empty
+drawPlace(0, _, 0) :-
     write('       |').
 
-drawPlace(0, _, 2) :-
+drawPlace(0, _, 1) :-
     write(' . . . |').
 
 % Elephant
@@ -50,94 +51,45 @@ drawPlace(3, 2, _) :- write('@o\\ /o@|').
 
 drawPlace(3, 3, _) :- write(' @@@@@ |').
 
-drawLine(10, Pieces, 2, 1) :-
-    write('10|'), 
-    nth1(1, Pieces, P1), nth1(2, Pieces, P2),
-    nth1(3, Pieces, P3), nth1(4, Pieces, P4),
-    nth1(5, Pieces, P5),nth1(6, Pieces, P6),
-    nth1(7, Pieces, P7), nth1(8, Pieces, P8),
-    nth1(9, Pieces, P9), nth1(10, Pieces, P10),
-    drawPlace(P1, 2, 1), drawPlace(P2, 2, 2), drawPlace(P3, 2, 1),
-    drawPlace(P4, 2, 2), drawPlace(P5, 2, 1), drawPlace(P6, 2, 2),
-    drawPlace(P7, 2, 1), drawPlace(P8, 2, 2), drawPlace(P9, 2, 1),
-    drawPlace(P10, 2, 2),
+% drawLineLoop(Index, Line, Offset)
+drawLineLoop(_, [], _).
+drawLineLoop(Index, [H|T], Offset) :-
+    Color is Index mod 2,
+    I1 is Index + 1,
+    drawPlace(H, Offset, Color),
+    drawLineLoop(I1, T, Offset).
+
+% drawLine(LineIndex, Line, Offset)
+drawLine(10, Line, 2) :-
+    write('10|'),
+    drawLineLoop(0, Line, 2),
     write('10'), nl.
 
-drawLine(N, Pieces, 2, 1) :-
+drawLine(N, Line, 2) :-
     write(N), write(' |'), 
-    nth1(1, Pieces, P1), nth1(2, Pieces, P2),
-    nth1(3, Pieces, P3), nth1(4, Pieces, P4),
-    nth1(5, Pieces, P5),nth1(6, Pieces, P6),
-    nth1(7, Pieces, P7), nth1(8, Pieces, P8),
-    nth1(9, Pieces, P9), nth1(10, Pieces, P10),
-    drawPlace(P1, 2, 1), drawPlace(P2, 2, 2), drawPlace(P3, 2, 1),
-    drawPlace(P4, 2, 2), drawPlace(P5, 2, 1), drawPlace(P6, 2, 2),
-    drawPlace(P7, 2, 1), drawPlace(P8, 2, 2), drawPlace(P9, 2, 1),
-    drawPlace(P10, 2, 2),
+    N1 is N mod 2,
+    drawLineLoop(N1, Line, 2),
     write(N), nl.
 
-drawLine(10, Pieces, 2, 2) :-
-    write('10|'), 
-    nth1(1, Pieces, P1), nth1(2, Pieces, P2),
-    nth1(3, Pieces, P3), nth1(4, Pieces, P4),
-    nth1(5, Pieces, P5),nth1(6, Pieces, P6),
-    nth1(7, Pieces, P7), nth1(8, Pieces, P8),
-    nth1(9, Pieces, P9), nth1(10, Pieces, P10),
-    drawPlace(P1, 2, 2), drawPlace(P2, 2, 1), drawPlace(P3, 2, 2),
-    drawPlace(P4, 2, 1), drawPlace(P5, 2, 2), drawPlace(P6, 2, 1),
-    drawPlace(P7, 2, 2), drawPlace(P8, 2, 1), drawPlace(P9, 2, 2),
-    drawPlace(P10, 2, 1),
-    write('10'), nl.
-
-drawLine(N, Pieces, 2, 2) :-
-    write(N), write(' |'), 
-    nth1(1, Pieces, P1), nth1(2, Pieces, P2),
-    nth1(3, Pieces, P3), nth1(4, Pieces, P4),
-    nth1(5, Pieces, P5),nth1(6, Pieces, P6),
-    nth1(7, Pieces, P7), nth1(8, Pieces, P8),
-    nth1(9, Pieces, P9), nth1(10, Pieces, P10),
-    drawPlace(P1, 2, 2), drawPlace(P2, 2, 1), drawPlace(P3, 2, 2),
-    drawPlace(P4, 2, 1), drawPlace(P5, 2, 2), drawPlace(P6, 2, 1),
-    drawPlace(P7, 2, 2), drawPlace(P8, 2, 1), drawPlace(P9, 2, 2),
-    drawPlace(P10, 2, 1),
-    write(N), nl.
-
-drawLine(_, Pieces, Stage, 1) :-
+drawLine(N, Line, Offset) :-
     write('  |'),
-    nth1(1, Pieces, P1), nth1(2, Pieces, P2),
-    nth1(3, Pieces, P3), nth1(4, Pieces, P4),
-    nth1(5, Pieces, P5),nth1(6, Pieces, P6),
-    nth1(7, Pieces, P7), nth1(8, Pieces, P8),
-    nth1(9, Pieces, P9), nth1(10, Pieces, P10),
-    drawPlace(P1, Stage, 1), drawPlace(P2, Stage, 2), drawPlace(P3, Stage, 1),
-    drawPlace(P4, Stage, 2), drawPlace(P5, Stage, 1), drawPlace(P6, Stage, 2),
-    drawPlace(P7, Stage, 1), drawPlace(P8, Stage, 2), drawPlace(P9, Stage, 1),
-    drawPlace(P10, Stage, 2), nl.
+    N1 is N mod 2,
+    drawLineLoop(N1, Line, Offset), nl.
 
-drawLine(_, Pieces, Stage, 2) :-
-    write('  |'),
-    nth1(1, Pieces, P1), nth1(2, Pieces, P2),
-    nth1(3, Pieces, P3), nth1(4, Pieces, P4),
-    nth1(5, Pieces, P5),nth1(6, Pieces, P6),
-    nth1(7, Pieces, P7), nth1(8, Pieces, P8),
-    nth1(9, Pieces, P9), nth1(10, Pieces, P10),
-    drawPlace(P1, Stage, 2), drawPlace(P2, Stage, 1), drawPlace(P3, Stage, 2),
-    drawPlace(P4, Stage, 1), drawPlace(P5, Stage, 2), drawPlace(P6, Stage, 1),
-    drawPlace(P7, Stage, 2), drawPlace(P8, Stage, 1), drawPlace(P9, Stage, 2),
-    drawPlace(P10, Stage, 1), nl.
+% drawRow(Index, Row)
+drawRow(Index, Row) :-
+    drawLine(Index, Row, 1),
+    drawLine(Index, Row, 2),
+    drawLine(Index, Row, 3).
 
-drawNRow(1, Pieces, Default) :-
-    nth1(1, Pieces, SetOfPieces),
-    drawLine(1, SetOfPieces, 1, Default),
-    drawLine(1, SetOfPieces, 2, Default),
-    drawLine(1, SetOfPieces, 3, Default).
-
-drawNRow(N, Pieces, Default) :-
-    nth1(N, Pieces, SetOfPieces),
-    drawLine(N, SetOfPieces, 1, Default),
-    drawLine(N, SetOfPieces, 2, Default),
-    drawLine(N, SetOfPieces, 3, Default),
-    write('   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  '), nl.
+% drawRowLoop(Index, Row)
+drawRowLoop(1, [H|_]) :-
+    drawRow(1, H).
+drawRowLoop(Index, [H|T]) :-
+    drawRow(Index, H),
+    write('   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  '), nl,
+    I1 is Index - 1,
+    drawRowLoop(I1, T).
 
 % For now, empty hard-coded board.
 drawBoard :-
@@ -152,11 +104,7 @@ drawBoard :-
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 3, 2, 2, 3, 0, 0, 0],
         [0, 0, 0, 0, 1, 1, 0, 0, 0, 0]
-    ], Pieces),
-    use_module(library(lists)),
+    ], Board),
     drawHeader,
-    drawNRow(10, Pieces, 1), drawNRow(9, Pieces, 2), drawNRow(8, Pieces, 1), 
-    drawNRow(7, Pieces, 2), drawNRow(6, Pieces, 1), drawNRow(5, Pieces, 2),
-    drawNRow(4, Pieces, 1), drawNRow(3, Pieces, 2), drawNRow(2, Pieces, 1), 
-    drawNRow(1, Pieces, 2), 
+    drawRowLoop(10, Board), 
     drawFooter.
