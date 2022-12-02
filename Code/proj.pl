@@ -11,6 +11,7 @@ Piece:
     1 - Elephant
     2 - Mouse
     3 - Lion
+    4 - Target
 
 Offset:
     1 - Top
@@ -27,6 +28,10 @@ Colors:
 % Empty
 drawPlace(0, _, 0) :- write('       |').
 drawPlace(0, _, 1) :- write(' . . . |').
+
+% Target
+drawPlace(4, 2, _) :- write(' --|-- |').
+drawPlace(4, _, _) :- write('   |   |').
 
 % Elephant
 drawPlace(1, 1, _) :- write('()o o()|').
@@ -57,7 +62,7 @@ drawLine(10, Line, 2) :-
     write('10'), nl.
 
 drawLine(N, Line, 2) :-
-    write(N), write(' |'), 
+    format(' ~d|', [N]),
     N1 is N mod 2,
     drawLineLoop(N1, Line, 2),
     write(N), nl.
@@ -90,10 +95,10 @@ drawBoard :-
         [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
         [0, 0, 0, 3, 2, 2, 3, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 4, 0, 0, 4, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 4, 0, 0, 4, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 3, 2, 2, 3, 0, 0, 0],
         [0, 0, 0, 0, 1, 1, 0, 0, 0, 0]
