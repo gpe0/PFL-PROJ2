@@ -8,10 +8,13 @@ drawFooter :-
 /*
 Piece:
     0 - No Piece
-    1 - Elephant
-    2 - Mouse
-    3 - Lion
-    4 - Target
+    1 - Elephant (Player 1)
+    2 - Mouse (Player 1)
+    3 - Lion (Player 1)
+    4 - Elephant (Player 2)
+    5 - Mouse (Player 2)
+    6 - Lion (Player 2)
+    7 - Target
 
 Offset:
     1 - Top
@@ -30,22 +33,32 @@ drawPlace(0, _, 0) :- write('       |').
 drawPlace(0, _, 1) :- write(' . . . |').
 
 % Target
-drawPlace(4, 2, _) :- write(' --|-- |').
-drawPlace(4, _, _) :- write('   |   |').
+drawPlace(7, 2, _) :- write(' --|-- |').
+drawPlace(7, _, _) :- write('   |   |').
 
 % Elephant
 drawPlace(1, 1, _) :- write('()o o()|').
 drawPlace(1, _, _) :- write('  ( )  |').
+drawPlace(4, 1, _) :- write('()o o()|').
+drawPlace(4, _, _) :- write('  ( )  |').
 
 % Mouse
 drawPlace(2, 1, _) :- write('| o o ||').
 drawPlace(2, 2, _) :- write(' \\   / |').
 drawPlace(2, 3, _) :- write(' -\\_/- |').
 
+drawPlace(5, 1, _) :- write('| o o ||').
+drawPlace(5, 2, _) :- write(' \\   / |').
+drawPlace(5, 3, _) :- write(' -\\_/- |').
+
 % Lion
 drawPlace(3, 1, _) :- write(' @@@@@ |').
 drawPlace(3, 2, _) :- write('@o\\ /o@|').
 drawPlace(3, 3, _) :- write(' @@@@@ |').
+
+drawPlace(6, 1, _) :- write(' @@@@@ |').
+drawPlace(6, 2, _) :- write('@o\\ /o@|').
+drawPlace(6, 3, _) :- write(' @@@@@ |').
 
 % drawLineLoop(Index, Line, Offset)
 drawLineLoop(_, [], _).
@@ -92,13 +105,13 @@ drawBoard(Board) :- drawRowLoop(10, Board).
 % For now, empty hard-coded board.
 drawBoard :-
     append([], [
-        [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
-        [0, 0, 0, 3, 2, 2, 3, 0, 0, 0],
+        [0, 0, 0, 0, 4, 4, 0, 0, 0, 0],
+        [0, 0, 0, 6, 5, 5, 6, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 4, 0, 0, 4, 0, 0, 0],
+        [0, 0, 0, 7, 0, 0, 7, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 4, 0, 0, 4, 0, 0, 0],
+        [0, 0, 0, 7, 0, 0, 7, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 3, 2, 2, 3, 0, 0, 0],
         [0, 0, 0, 0, 1, 1, 0, 0, 0, 0]
@@ -106,3 +119,31 @@ drawBoard :-
     drawHeader,
     drawBoard(Board), 
     drawFooter.
+
+movePiece(Line1, Column1, Line2, Column2, Board, NewBoard) :-
+    (Line1 = 4 ; Line1 = 7),
+    (Column1 = 4 ; Column1 = 7),
+    findPiece(Line1, Column1, Board, Piece),
+    setPiece(Line1, Column1, Board, 7, TempBoard), % clear the previous space
+    setPiece(Line2, Column2, TempBoard, Piece, NewBoard).
+
+movePiece(Line1, Column1, Line2, Column2, Board, NewBoard) :-
+    findPiece(Line1, Column1, Board, Piece),
+    setPiece(Line1, Column1, Board, 0, TempBoard), % clear the previous space
+    setPiece(Line2, Column2, TempBoard, Piece, NewBoard).    
+
+
+findPiece(Line, Column, Board, Piece) :-
+    use_module(library(lists)),
+    nth1(Line, Board, BoardLine),
+    nth1(Column, BoardLine, Piece).
+
+setPiece(Line, Column, Board, Piece, BoardRes) :-
+    use_module(library(lists)),
+    nth1(Line, Board, BoardLine, RestBoard),
+    nth1(Column, BoardLine, _, RestLine),
+    nth1(Column, ModifiedLine, Piece, RestLine),
+    nth1(Line, BoardRes, ModifiedLine, RestBoard).
+
+
+    
