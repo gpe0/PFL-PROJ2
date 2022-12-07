@@ -1,5 +1,7 @@
 :- use_module(library(lists)).
+:- use_module(library(random)).
 :- use_module(boards).
+
 
 drawHeader :- 
     write('      A       B       C       D       E       F       G       H       I       J     '), nl,
@@ -66,36 +68,36 @@ drawPlace(6, 3, _) :- write(' @@@@@ |').
 % Possible Move
 drawPlace(8, _, _) :- write('XXXXXXX|').
 
-% drawLineLoop(Index, Line, Offset)
-drawLineLoop(_, [], _).
-drawLineLoop(Index, [H|T], Offset) :-
+% drawYLoop(Index, Y, Offset)
+drawYLoop(_, [], _).
+drawYLoop(Index, [H|T], Offset) :-
     Color is Index mod 2,
     I1 is Index + 1,
     drawPlace(H, Offset, Color),
-    drawLineLoop(I1, T, Offset).
+    drawYLoop(I1, T, Offset).
 
-% drawLine(LineIndex, Line, Offset)
-drawLine(10, Line, 2) :-
+% drawY(YIndex, Y, Offset)
+drawY(10, Y, 2) :-
     write('10|'),
-    drawLineLoop(0, Line, 2),
+    drawYLoop(0, Y, 2),
     write('10'), nl.
 
-drawLine(N, Line, 2) :-
+drawY(N, Y, 2) :-
     format(' ~d|', [N]),
     N1 is N mod 2,
-    drawLineLoop(N1, Line, 2),
+    drawYLoop(N1, Y, 2),
     write(N), nl.
 
-drawLine(N, Line, Offset) :-
+drawY(N, Y, Offset) :-
     write('  |'),
     N1 is N mod 2,
-    drawLineLoop(N1, Line, Offset), nl.
+    drawYLoop(N1, Y, Offset), nl.
 
 % drawRow(Index, Row)
 drawRow(Index, Row) :-
-    drawLine(Index, Row, 1),
-    drawLine(Index, Row, 2),
-    drawLine(Index, Row, 3).
+    drawY(Index, Row, 1),
+    drawY(Index, Row, 2),
+    drawY(Index, Row, 3).
 
 % drawRowLoop(Index, Row)
 drawRowLoop(_, []).
@@ -111,20 +113,15 @@ drawBoard(Board) :-
     drawRowLoop(10, Board),
     drawFooter.
 
-% For now, empty hard-coded board.
-drawBoard :-
-    get_initial_board(Board),
-    drawBoard(Board).
-
 getPiece(X, Y, Board, P) :-
     nth1(Y, Board, Row),
     nth1(X, Row, P).
-
+ 
 setPiece(X, Y, Board, P, NewBoard) :-
     nth1(Y, Board, Row, RestBoard),
-    nth1(X, Row, _, RestLine),
-    nth1(X, ModifiedLine, P, RestLine),
-    nth1(Y, NewBoard, ModifiedLine, RestBoard).
+    nth1(X, Row, _, RestY),
+    nth1(X, ModifiedY, P, RestY),
+    nth1(Y, NewBoard, ModifiedY, RestBoard).
 
 movePiece(X1, Y1, X2, Y2, Board, NewBoard) :-
     (Y1 = 4 ; Y1 = 7),
@@ -197,3 +194,93 @@ drawMoves(Board, [X-Y|T], NewBoard) :-
 test_vis(X, Y, Piece) :-
     get_initial_board(B),
     visualize_moves(X, Y, Piece, B).
+
+main :-
+    get_initial_board(Board),
+    %random_between(0, 1, RandomPlayer),
+    gameLoop(0, Board).
+
+
+clear_buffer:-
+    repeat,
+    get_char(C),
+    C = '\n'.
+
+read_number(X):-
+    read_number_aux(X,0).
+
+read_number_aux(X,Acc):- 
+    get_code(C),
+    C >= 48,
+    C =< 57,
+    !,
+    Acc1 is 10*Acc + (C - 48),
+    read_number_aux(X,Acc1).
+read_number_aux(X,X).
+
+getY(YCode, Y) :-
+    YCode < 97,
+    Y is YCode - 64.
+
+getY(YCode, Y) :-
+    YCode > 96,
+    Y is YCode - 96.
+
+getInput(0, X, Y) :-
+    write('[Player 1] Choose the piece to move:'),
+    get_code(XCode),
+    read_number(YInput),
+    getY(XCode, X),
+    Y is 11 - YInput,
+    nl.
+
+getInput(1, X, Y) :-
+    write('[Player 2] Choose the piece to move:'),
+    get_code(XCode),
+    read_number(YInput),
+    getY(XCode, X),
+    Y is 11 - YInput,
+    nl.
+
+inputHandler(Board, 0, X, Y, Piece) :-
+    getInput(0, X, Y),
+    getPiece(X, Y, Board, Piece),
+    (Piece = 1 ; Piece = 2 ; Piece = 3; inputHandler(Board, 0, X, Y)).
+
+
+inputHandler(Board, 1, X, Y, Piece) :-
+    getInput(1, X, Y),
+    getPiece(X, Y, Board, Piece),
+    (Piece = 4 ; Piece = 5 ; Piece = 6; inputHandler(Board, 1, X, Y, Piece)).
+
+inputHandler(Board, 2, X, Y, Moves) :-
+    getInput(0, X, Y),
+    getPiece(X, Y, Board, Piece),
+    (member(X-Y, Moves); inputHandler(Board, 2, X, Y, Moves)).
+
+inputHandler(Board, 3, X, Y, Moves) :-
+    getInput(0, X, Y),
+    getPiece(X, Y, Board, Piece),
+    (member(X-Y, Moves); inputHandler(Board, 3, X, Y, Moves)).
+
+
+gameLoop(0, Board) :-
+    drawBoard(Board),
+    inputHandler(Board, 0, X, Y, Piece),
+    visualize_moves(X, Y, Piece, Board),
+    getMoves(X, Y, Piece, Board, Moves),
+    inputHandler(Board, 2, ToX, ToY, Moves),
+    movePiece(X, Y, ToX, ToY, Board, NewBoard),
+    gameLoop(1, NewBoard).
+
+gameLoop(1, Board) :-
+    drawBoard(Board),
+    inputHandler(Board, 1, X, Y, Piece),
+    visualize_moves(X, Y, Piece, Board),
+    getMoves(X, Y, Piece, Board, Moves),
+    inputHandler(Board, 3, ToX, ToY, Moves),
+    movePiece(X, Y, ToX, ToY, Board, NewBoard),
+    gameLoop(0, NewBoard).  
+
+
+    
