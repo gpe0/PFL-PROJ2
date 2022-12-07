@@ -284,3 +284,65 @@ gameLoop(1, Board) :-
 
 
     
+% =========================================================================
+% GAME OVER
+% =========================================================================
+
+% playerPiece(Piece, Player)
+playerPiece(1, 0).
+playerPiece(2, 0).
+playerPiece(3, 0).
+playerPiece(4, 1).
+playerPiece(5, 1).
+playerPiece(6, 1).
+
+% playerPiece(Piece, Player, Value)
+% Value = 1 on success
+% Value = 0 on fail
+% This function will help game over be more efficient
+playerPieceValue(1, 0, 1).
+playerPieceValue(2, 0, 1).
+playerPieceValue(3, 0, 1).
+playerPieceValue(4, 1, 1).
+playerPieceValue(5, 1, 1).
+playerPieceValue(6, 1, 1).
+playerPieceValue(_, _, 0).
+
+% game_over(+GameState, -Winner)
+game_over(Board, Winner) :-
+    getPiece(4, 4, Board, P1),
+    getPiece(7, 4, Board, P2),
+    getPiece(4, 7, Board, P3),
+    getPiece(7, 7, Board, P4),
+    game_over_winner(P1, P2, P3, P4, Winner).
+
+% game_over_winner(P1, P2, P3, P4, Winner)
+game_over_winner(P1, P2, P3, P4, 0) :-
+    playerPieceValue(P1, 0, V1),
+    playerPieceValue(P2, 0, V2),
+    playerPieceValue(P3, 0, V3),
+    playerPieceValue(P4, 0, V4),
+    NumPieces is V1 + V2 + V3 + V4,
+    NumPieces > 2.
+game_over_winner(P1, P2, P3, P4, 1) :-
+    playerPieceValue(P1, 1, V1),
+    playerPieceValue(P2, 1, V2),
+    playerPieceValue(P3, 1, V3),
+    playerPieceValue(P4, 1, V4),
+    NumPieces is V1 + V2 + V3 + V4,
+    NumPieces > 2.
+game_over_winner(_,_,_,_,2).
+
+test_game_over :-
+    board_game_is_over1(B1),
+    board_game_is_over2(B2),
+    board_game_is_over3(B3),
+    board_game_is_over4(B4),
+    board_game_not_over1(B5),
+    board_game_not_over2(B6),
+    game_over(B1, 0),
+    game_over(B2, 1),
+    game_over(B3, 1),
+    game_over(B4, 1),
+    game_over(B5, 2),
+    game_over(B6, 2).
