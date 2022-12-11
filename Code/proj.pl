@@ -116,12 +116,17 @@ drawBoard(Board) :-
 getPiece(X, Y, Board, P) :-
     nth1(Y, Board, Row),
     nth1(X, Row, P).
+getPiece(_, _, _, 99). % Fail prevention (AI)
  
 setPiece(X, Y, Board, P, NewBoard) :-
     nth1(Y, Board, Row, RestBoard),
     nth1(X, Row, _, RestY),
     nth1(X, ModifiedY, P, RestY),
     nth1(Y, NewBoard, ModifiedY, RestBoard).
+
+% =========================================================================
+% MOVEMENT
+% =========================================================================
 
 movePiece(X1, Y1, X2, Y2, Board, NewBoard) :-
     (Y1 = 4 ; Y1 = 7),
@@ -194,6 +199,10 @@ drawMoves(Board, [X-Y|T], NewBoard) :-
 test_vis(X, Y, Piece) :-
     get_initial_board(B),
     visualize_moves(X, Y, Piece, B).
+
+% =========================================================================
+% INPUT
+% =========================================================================
 
 main :-
     get_initial_board(Board),
@@ -285,8 +294,144 @@ gameLoop(1, Board) :-
     movePiece(X, Y, ToX, ToY, Board, NewBoard),
     gameLoop(0, NewBoard).  
 
+% =========================================================================
+% AI RANDOM BOT
+% =========================================================================
 
-    
+% isEmptyPiece
+isEmptyPiece(0).
+isEmptyPiece(7).
+
+valid_pieces(Board, Player, Pieces) :-
+    findall(X-Y-P, valid_pieces_aux(X, Y, Board, Player, P), Pieces).
+
+valid_pieces_aux(X, Y, Board, Player, P) :-
+    getPiece(X, Y, Board, P),
+    \+isEmptyPiece(P),
+    playerPiece(P, Player).
+
+getRandomPiece(Board, Player, X-Y-Piece) :-
+    valid_pieces(Board, Player, ValidPieces),
+    random_member(X-Y-Piece, ValidPieces).
+
+getRandomMove(Board, X-Y-Piece, XF-YF) :-
+    getMoves(X, Y, Piece, Board, ValidMoves),
+    random_member(XF-YF, ValidMoves).
+
+test :-
+    get_initial_board(Board),
+    getRandomPiece(Board, 1, X-Y-Piece),
+    getRandomMove(Board, X-Y-Piece, XF-YF),
+    write('Piece: '), write(Piece), nl,
+    write('Current Position: '), write(X-Y), nl,
+    write('Move Position: '), write(XF-YF).
+
+% =========================================================================
+% AI BIG BRAIN BOT
+% =========================================================================
+
+generateBoards(Board, [X-Y-Piece|RestPieces], Acc, Boards) :-
+    getMoves(X, Y, Piece, Board, ValidMoves),
+    generateBoardsAux(Board, X-Y-Piece, ValidMoves, [], NewBoards),
+    append(Acc, NewBoards, Aux),
+    generateBoards(Board, RestPieces, Aux, Boards).
+generateBoards(_, _, Acc, Acc).
+
+generateBoardsAux(Board, X-Y-Piece, [XF-YF|RestMoves], Acc, Boards) :-
+    movePiece(X, Y, XF, YF, Board, NewBoard),
+    generateBoardsAux(Board, X-Y-Piece, RestMoves, [NewBoard | Acc], Boards).
+generateBoardsAux(_,_,_,Acc,Acc).
+
+evaluate(Board, Player, Value) :-
+    getPiece(4, 4, Board, P1),
+    getPiece(7, 4, Board, P2),
+    getPiece(4, 7, Board, P3),
+    getPiece(7, 7, Board, P4),
+    getPlayerPoints(P1, P2, P3, P4, Player, Points),
+    findScaredPieces(Board, Player, ScaredPlayer),
+    OtherPlayer is 1 - Player,
+    findScaredPieces(Board, OtherPlayer, ScaredOtherPlayer),
+    length(ScaredPlayer, NumScaredPlayer),
+    length(ScaredOtherPlayer, NumScaredOtherPlayer),
+    Value is Points * -100 + NumScaredPlayer - NumScaredOtherPlayer.
+
+evaluateBoards([], _, []).
+evaluateBoards([B|RestBoards], Player, [V-B|RT]) :-
+    evaluate(B, Player, V),
+    evaluateBoards(RestBoards, Player, RT).
+
+getBestBoards([V-B|RestBoards], V, [B|T]) :-
+    getBestBoards(RestBoards, V, T).
+getBestBoards(_, _, []).
+
+test_all :-
+    Player = 1,
+    get_initial_board(Board),
+    valid_pieces(Board, Player, ValidPieces),
+    generateBoards(Board, ValidPieces, [], NewBoards),
+    evaluateBoards(NewBoards, Player, BoardsEvaluated),
+    sort(BoardsEvaluated, SortedBoards),
+    nth1(1, SortedBoards, V-_),
+    getBestBoards(SortedBoards, V, BestBoards),
+    random_member(MoveChosen, BestBoards),
+    drawBoard(MoveChosen).
+
+drawBoards([]).
+drawBoards([H|T]) :-
+    drawBoard(H),
+    drawBoards(T).
+
+% =========================================================================
+% FEAR MECHANIC
+% =========================================================================
+
+scared(2,6).
+scared(5,3).
+scared(3,4).
+scared(6,1).
+scared(1,5).
+scared(4,2).
+
+findScaredPieces(Board, Player, Pieces) :-
+    valid_pieces(Board, Player, ValidPieces),
+    findScaredPiecesAux(Board, Player, ValidPieces, [], Pieces).
+
+findScaredPiecesAux(_, _, [], Acc, Acc).
+findScaredPiecesAux(Board, Player, [X-Y-P|T], Acc, ScaredPieces) :-
+    isScared(X, Y, Board, Player, P),
+    findScaredPiecesAux(Board, Player, T, [X-Y-P|Acc], ScaredPieces).
+findScaredPiecesAux(Board, Player, [_|T], Acc, ScaredPieces) :-
+    findScaredPiecesAux(Board, Player, T, Acc, ScaredPieces).
+
+% UGLY CODE ALERT %
+isScared(X, Y, Board, Player, P) :-
+    X1 is X - 1,
+    X2 is X + 1,
+    Y1 is Y - 1,
+    Y2 is Y + 1,
+    getPiece(X, Y1, Board, P1),
+    getPiece(X, Y2, Board, P2),
+    getPiece(X1, Y, Board, P3),
+    getPiece(X1, Y1, Board, P4),
+    getPiece(X1, Y2, Board, P5),
+    getPiece(X2, Y, Board, P6),
+    getPiece(X2, Y1, Board, P7),
+    getPiece(X2, Y2, Board, P8),
+    OtherPlayer is 1 - Player,
+    ((playerPiece(P1, OtherPlayer), scared(P, P1)); 
+    (playerPiece(P2, OtherPlayer), scared(P, P2));
+    (playerPiece(P3, OtherPlayer), scared(P, P3));
+    (playerPiece(P4, OtherPlayer), scared(P, P4));
+    (playerPiece(P5, OtherPlayer), scared(P, P5));
+    (playerPiece(P6, OtherPlayer), scared(P, P6));
+    (playerPiece(P7, OtherPlayer), scared(P, P7));
+    (playerPiece(P8, OtherPlayer), scared(P, P8))).
+
+test_scare :-
+    board_scared_1(B),
+    findScaredPieces(B, 0, Pieces),
+    write(Pieces).
+
 % =========================================================================
 % GAME OVER
 % =========================================================================
@@ -311,6 +456,13 @@ playerPieceValue(5, 1, 1).
 playerPieceValue(6, 1, 1).
 playerPieceValue(_, _, 0).
 
+getPlayerPoints(P1, P2, P3, P4, Player, Points) :-
+    playerPieceValue(P1, Player, V1),
+    playerPieceValue(P2, Player, V2),
+    playerPieceValue(P3, Player, V3),
+    playerPieceValue(P4, Player, V4),
+    Points is V1 + V2 + V3 + V4.
+
 % game_over(+GameState, -Winner)
 game_over(Board, Winner) :-
     getPiece(4, 4, Board, P1),
@@ -321,19 +473,11 @@ game_over(Board, Winner) :-
 
 % game_over_winner(P1, P2, P3, P4, Winner)
 game_over_winner(P1, P2, P3, P4, 0) :-
-    playerPieceValue(P1, 0, V1),
-    playerPieceValue(P2, 0, V2),
-    playerPieceValue(P3, 0, V3),
-    playerPieceValue(P4, 0, V4),
-    NumPieces is V1 + V2 + V3 + V4,
-    NumPieces > 2.
+    getPlayerPoints(P1, P2, P3, P4, 0, Points),
+    Points > 2.
 game_over_winner(P1, P2, P3, P4, 1) :-
-    playerPieceValue(P1, 1, V1),
-    playerPieceValue(P2, 1, V2),
-    playerPieceValue(P3, 1, V3),
-    playerPieceValue(P4, 1, V4),
-    NumPieces is V1 + V2 + V3 + V4,
-    NumPieces > 2.
+    getPlayerPoints(P1, P2, P3, P4, 1, Points),
+    Points > 2.
 game_over_winner(_,_,_,_,2).
 
 test_game_over :-
