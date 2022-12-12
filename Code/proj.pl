@@ -43,26 +43,28 @@ drawPlace(7, _, _) :- write('   |   |').
 
 % Elephant
 drawPlace(1, 1, _) :- write('()o o()|').
+drawPlace(1, 2, _) :- write('  (1)  |').
 drawPlace(1, _, _) :- write('  ( )  |').
 drawPlace(4, 1, _) :- write('()o o()|').
+drawPlace(4, 2, _) :- write('  (2)  |').
 drawPlace(4, _, _) :- write('  ( )  |').
 
 % Mouse
 drawPlace(2, 1, _) :- write('| o o ||').
-drawPlace(2, 2, _) :- write(' \\   / |').
+drawPlace(2, 2, _) :- write(' \\ 1 / |').
 drawPlace(2, 3, _) :- write(' -\\_/- |').
 
 drawPlace(5, 1, _) :- write('| o o ||').
-drawPlace(5, 2, _) :- write(' \\   / |').
+drawPlace(5, 2, _) :- write(' \\ 2 / |').
 drawPlace(5, 3, _) :- write(' -\\_/- |').
 
 % Lion
 drawPlace(3, 1, _) :- write(' @@@@@ |').
-drawPlace(3, 2, _) :- write('@o\\ /o@|').
+drawPlace(3, 2, _) :- write('@o\\1/o@|').
 drawPlace(3, 3, _) :- write(' @@@@@ |').
 
 drawPlace(6, 1, _) :- write(' @@@@@ |').
-drawPlace(6, 2, _) :- write('@o\\ /o@|').
+drawPlace(6, 2, _) :- write('@o\\2/o@|').
 drawPlace(6, 3, _) :- write(' @@@@@ |').
 
 % Possible Move
@@ -380,6 +382,33 @@ drawBoards([]).
 drawBoards([H|T]) :-
     drawBoard(H),
     drawBoards(T).
+
+bots_main :-
+    get_initial_board(Board),
+    drawBoard(Board),
+    bots_loop(0, Board).
+
+bots_loop(Player, Board) :-
+    findScaredPieces(Board, Player, ScaredPieces),
+    ScaredPieces  = [_|_],
+    write('Has scared pieces.'), nl, write(ScaredPieces), nl,
+    bots_loop_aux(Player, Board, ScaredPieces).
+bots_loop(Player, Board) :-
+    valid_pieces(Board, Player, Pieces),
+    write('Free game.'), nl,
+    bots_loop_aux(Player, Board, Pieces).
+
+bots_loop_aux(Player, Board, Pieces) :-
+    generateBoards(Board, Pieces, [], NewBoards),
+    evaluateBoards(NewBoards, Player, BoardsEvaluated),
+    sort(BoardsEvaluated, SortedBoards),
+    nth1(1, SortedBoards, V-_),
+    getBestBoards(SortedBoards, V, BestBoards),
+    random_member(MoveChosen, BestBoards),
+
+    Other is 1 - Player,
+    drawBoard(MoveChosen),
+    bots_loop(Other, MoveChosen).
 
 % =========================================================================
 % FEAR MECHANIC
