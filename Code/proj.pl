@@ -387,6 +387,10 @@ bots_main :-
     drawBoard(Board),
     bots_loop(0, Board).
 
+bots_loop(_, Board) :-
+    game_over(Board, Winner),
+    Winner < 2,
+    format('WINNER IS ~d', [Winner]).
 bots_loop(Player, Board) :-
     findScaredPieces(Board, Player, ScaredPieces),
     ScaredPieces  = [_|_],
@@ -504,11 +508,11 @@ game_over(Board, Winner) :-
     game_over_winner(P1, P2, P3, P4, Winner).
 
 % game_over_winner(P1, P2, P3, P4, Winner)
-game_over_winner(P1, P2, P3, P4, 0) :-
-    getPlayerPoints(P1, P2, P3, P4, 0, Points),
-    Points > 2.
 game_over_winner(P1, P2, P3, P4, 1) :-
     getPlayerPoints(P1, P2, P3, P4, 1, Points),
+    Points > 2.
+game_over_winner(P1, P2, P3, P4, 2) :-
+    getPlayerPoints(P1, P2, P3, P4, 2, Points),
     Points > 2.
 game_over_winner(_,_,_,_,2).
 
