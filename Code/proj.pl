@@ -142,54 +142,55 @@ movePiece(X1, Y1, X2, Y2, Board, NewBoard) :-
     setPiece(X1, Y1, Board, 0, TempBoard), % clear the previous space
     setPiece(X2, Y2, TempBoard, Piece, NewBoard).    
 
-% getMoves(X, Y, Piece, Board, Moves)
-getMoves(X, Y, P, Board, Moves) :-
+% getMoves(X, Y, Piece, Board, Player, Moves)
+getMoves(X, Y, P, Board, Player, Moves) :-
     (P = 2; P = 5),
-    expand(X, Y, -1, 0, Board, Left),
-    expand(X, Y, 1, 0, Board, Right),
-    expand(X, Y, 0, 1, Board, Top),
-    expand(X, Y, 0, -1, Board, Down),
+    expand(X, Y, -1, 0, Board, Player, P, Left),
+    expand(X, Y, 1, 0, Board, Player, P, Right),
+    expand(X, Y, 0, 1, Board, Player, P, Top),
+    expand(X, Y, 0, -1, Board, Player, P, Down),
     % TODO: implement flatten
     append(Left, Right, M1),
     append(M1, Top, M2),
     append(M2, Down, Moves).
-getMoves(X, Y, P, Board, Moves) :-
+getMoves(X, Y, P, Board, Player, Moves) :-
     (P = 3; P = 6),
-    expand(X, Y, -1, -1, Board, DL),
-    expand(X, Y, 1, 1, Board, TR),
-    expand(X, Y, -1, 1, Board, TL),
-    expand(X, Y, 1, -1, Board, DR),
+    expand(X, Y, -1, -1, Board, Player, P, DL),
+    expand(X, Y, 1, 1, Board, Player, P, TR),
+    expand(X, Y, -1, 1, Board, Player, P, TL),
+    expand(X, Y, 1, -1, Board, Player, P, DR),
     % TODO: implement flatten
     append(DL, DR, D),
     append(TL, TR, T),
     append(D, T, Moves).
-getMoves(X, Y, P, Board, Moves) :-
+getMoves(X, Y, P, Board, Player, Moves) :-
     (P = 1; P = 4),
-    getMoves(X,Y,2,Board,Moves1),
-    getMoves(X,Y,3,Board,Moves2),
-    append(Moves1,Moves2,Moves).
+    getMoves(X, Y, 2, Board, Player, Moves1),
+    getMoves(X, Y, 3, Board, Player, Moves2),
+    append(Moves1, Moves2, Moves).
 
-expand(X, Y, StepX, StepY, Board, Moves) :-
+expand(X, Y, StepX, StepY, Board, Player, Piece, Moves) :-
     X1 is X + StepX,
     Y1 is Y + StepY,
-    expand_acc(X1, Y1, StepX, StepY, Board, [], Moves).
+    expand_acc(X1, Y1, StepX, StepY, Board, Player, Piece, [], Moves).
 
 % expand_acc(X, Y, StepX, StepY, Acc, Result)
-expand_acc(0, _, _, _, _, Acc, Acc).
-expand_acc(11, _, _, _, _, Acc, Acc).
-expand_acc(_, 0, _, _, _, Acc, Acc).
-expand_acc(_, 11, _, _, _, Acc, Acc).
-expand_acc(X, Y, StepX, StepY, Board, Acc, Result) :-
+expand_acc(0, _, _, _, _, _, _, Acc, Acc).
+expand_acc(11, _, _, _, _, _, _, Acc, Acc).
+expand_acc(_, 0, _, _, _, _, _, Acc, Acc).
+expand_acc(_, 11, _, _, _, _, _, Acc, Acc).
+expand_acc(X, Y, StepX, StepY, Board, Player, Piece, Acc, Result) :-
     getPiece(X, Y, Board, V),
     (V =:= 0 ; V =:= 7),
+    \+isScared(X, Y, Board, Player, Piece),
     A1 = [X-Y|Acc],
     X1 is X + StepX,
     Y1 is Y + StepY,
-    expand_acc(X1, Y1, StepX, StepY, Board, A1, Result).
-expand_acc(_, _, _, _, _, Acc, Acc).
+    expand_acc(X1, Y1, StepX, StepY, Board, Player, Piece, A1, Result).
+expand_acc(_, _, _, _, _, _, _, Acc, Acc).
     
-visualize_moves(X, Y, Piece, Board) :-
-    getMoves(X, Y, Piece, Board, Moves),
+visualize_moves(X, Y, Piece, Board, Player, Moves) :-
+    getMoves(X, Y, Piece, Board, Player, Moves),
     drawMoves(Board, Moves, NewBoard),
     drawBoard(NewBoard).
 
@@ -200,7 +201,7 @@ drawMoves(Board, [X-Y|T], NewBoard) :-
 
 test_vis(X, Y, Piece) :-
     get_initial_board(B),
-    visualize_moves(X, Y, Piece, B).
+    visualize_moves(X, Y, Piece, B, 0, _).
 
 % =========================================================================
 % INPUT
@@ -281,8 +282,7 @@ inputHandler(Board, 3, Moves, X, Y, Piece) :-
 gameLoop(0, Board) :-
     drawBoard(Board),
     inputHandler(Board, 0, X, Y, Piece),
-    visualize_moves(X, Y, Piece, Board),
-    getMoves(X, Y, Piece, Board, Moves),
+    visualize_moves(X, Y, Piece, Board, 0, Moves),
     inputHandler(Board, 2, Moves, ToX, ToY, _),
     movePiece(X, Y, ToX, ToY, Board, NewBoard),
     gameLoop(1, NewBoard).
@@ -290,8 +290,7 @@ gameLoop(0, Board) :-
 gameLoop(1, Board) :-
     drawBoard(Board),
     inputHandler(Board, 1, X, Y, Piece),
-    visualize_moves(X, Y, Piece, Board),
-    getMoves(X, Y, Piece, Board, Moves),
+    visualize_moves(X, Y, Piece, Board, 1, Moves),
     inputHandler(Board, 3, Moves, ToX, ToY, _),
     movePiece(X, Y, ToX, ToY, Board, NewBoard),
     gameLoop(0, NewBoard).  
@@ -316,14 +315,14 @@ getRandomPiece(Board, Player, X-Y-Piece) :-
     valid_pieces(Board, Player, ValidPieces),
     random_member(X-Y-Piece, ValidPieces).
 
-getRandomMove(Board, X-Y-Piece, XF-YF) :-
-    getMoves(X, Y, Piece, Board, ValidMoves),
+getRandomMove(Board, Player, X-Y-Piece, XF-YF) :-
+    getMoves(X, Y, Piece, Board, Player, ValidMoves),
     random_member(XF-YF, ValidMoves).
 
 test :-
     get_initial_board(Board),
     getRandomPiece(Board, 1, X-Y-Piece),
-    getRandomMove(Board, X-Y-Piece, XF-YF),
+    getRandomMove(Board, 1, X-Y-Piece, XF-YF),
     write('Piece: '), write(Piece), nl,
     write('Current Position: '), write(X-Y), nl,
     write('Move Position: '), write(XF-YF).
@@ -332,12 +331,12 @@ test :-
 % AI BIG BRAIN BOT
 % =========================================================================
 
-generateBoards(Board, [X-Y-Piece|RestPieces], Acc, Boards) :-
-    getMoves(X, Y, Piece, Board, ValidMoves),
+generateBoards(Board, Player, [X-Y-Piece|RestPieces], Acc, Boards) :-
+    getMoves(X, Y, Piece, Board, Player, ValidMoves),
     generateBoardsAux(Board, X-Y-Piece, ValidMoves, [], NewBoards),
     append(Acc, NewBoards, Aux),
-    generateBoards(Board, RestPieces, Aux, Boards).
-generateBoards(_, _, Acc, Acc).
+    generateBoards(Board, Player, RestPieces, Aux, Boards).
+generateBoards(_, _, _, Acc, Acc).
 
 generateBoardsAux(Board, X-Y-Piece, [XF-YF|RestMoves], Acc, Boards) :-
     movePiece(X, Y, XF, YF, Board, NewBoard),
@@ -370,7 +369,7 @@ test_all :-
     Player = 1,
     get_initial_board(Board),
     valid_pieces(Board, Player, ValidPieces),
-    generateBoards(Board, ValidPieces, [], NewBoards),
+    generateBoards(Board, Player, ValidPieces, [], NewBoards),
     evaluateBoards(NewBoards, Player, BoardsEvaluated),
     sort(BoardsEvaluated, SortedBoards),
     nth1(1, SortedBoards, V-_),
@@ -399,7 +398,7 @@ bots_loop(Player, Board) :-
     bots_loop_aux(Player, Board, Pieces).
 
 bots_loop_aux(Player, Board, Pieces) :-
-    generateBoards(Board, Pieces, [], NewBoards),
+    generateBoards(Board, Player, Pieces, [], NewBoards),
     evaluateBoards(NewBoards, Player, BoardsEvaluated),
     sort(BoardsEvaluated, SortedBoards),
     nth1(1, SortedBoards, V-_),
@@ -460,6 +459,10 @@ test_scare :-
     board_scared_1(B),
     findScaredPieces(B, 0, Pieces),
     write(Pieces).
+
+test_scare_mov :-
+    board_scared_2(B),
+    visualize_moves(5, 5, 1, B, 0, _).
 
 % =========================================================================
 % GAME OVER
