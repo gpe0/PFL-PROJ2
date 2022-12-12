@@ -1,16 +1,3 @@
-:- module(boards, [
-    get_initial_board/1,
-    board_game_is_over1/1,
-    board_game_is_over2/1,
-    board_game_is_over3/1,
-    board_game_is_over4/1,
-    board_game_not_over1/1,
-    board_game_not_over2/1,
-    board_scared_1/1,
-    board_scared_2/1,
-    board_bug_scared/1
-]).
-
 % =========================================================================
 % INITIAL BOARD OF THE GAME
 % =========================================================================
