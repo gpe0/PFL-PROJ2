@@ -149,7 +149,6 @@ getMoves(X, Y, P, Board, Player, Moves) :-
     expand(X, Y, 1, 0, Board, Player, P, Right),
     expand(X, Y, 0, 1, Board, Player, P, Top),
     expand(X, Y, 0, -1, Board, Player, P, Down),
-    % TODO: implement flatten
     append(Left, Right, M1),
     append(M1, Top, M2),
     append(M2, Down, Moves).
@@ -159,7 +158,6 @@ getMoves(X, Y, P, Board, Player, Moves) :-
     expand(X, Y, 1, 1, Board, Player, P, TR),
     expand(X, Y, -1, 1, Board, Player, P, TL),
     expand(X, Y, 1, -1, Board, Player, P, DR),
-    % TODO: implement flatten
     append(DL, DR, D),
     append(TL, TR, T),
     append(D, T, Moves).
@@ -180,9 +178,13 @@ expand_acc(11, _, _, _, _, _, _, Acc, Acc).
 expand_acc(_, 0, _, _, _, _, _, Acc, Acc).
 expand_acc(_, 11, _, _, _, _, _, Acc, Acc).
 expand_acc(X, Y, StepX, StepY, Board, Player, Piece, Acc, Result) :-
+    isScared(X, Y, Board, Player, Piece),
+    X1 is X + StepX,
+    Y1 is Y + StepY,
+    expand_acc(X1, Y1, StepX, StepY, Board, Player, Piece, Acc, Result).
+expand_acc(X, Y, StepX, StepY, Board, Player, Piece, Acc, Result) :-
     getPiece(X, Y, Board, V),
     (V =:= 0 ; V =:= 7),
-    \+isScared(X, Y, Board, Player, Piece),
     A1 = [X-Y|Acc],
     X1 is X + StepX,
     Y1 is Y + StepY,
@@ -389,7 +391,7 @@ bots_main :-
 
 bots_loop(_, Board) :-
     game_over(Board, Winner),
-    Winner < 2,
+    Winner < 3,
     format('WINNER IS ~d', [Winner]).
 bots_loop(Player, Board) :-
     findScaredPieces(Board, Player, ScaredPieces),
@@ -468,6 +470,10 @@ test_scare_mov :-
     board_scared_2(B),
     visualize_moves(5, 5, 1, B, 0, _).
 
+test_fix_bug :-
+    board_bug_scared(B),
+    bots_loop(1, B).
+
 % =========================================================================
 % GAME OVER
 % =========================================================================
@@ -509,12 +515,12 @@ game_over(Board, Winner) :-
 
 % game_over_winner(P1, P2, P3, P4, Winner)
 game_over_winner(P1, P2, P3, P4, 1) :-
-    getPlayerPoints(P1, P2, P3, P4, 1, Points),
+    getPlayerPoints(P1, P2, P3, P4, 0, Points),
     Points > 2.
 game_over_winner(P1, P2, P3, P4, 2) :-
-    getPlayerPoints(P1, P2, P3, P4, 2, Points),
+    getPlayerPoints(P1, P2, P3, P4, 1, Points),
     Points > 2.
-game_over_winner(_,_,_,_,2).
+game_over_winner(_,_,_,_,3).
 
 test_game_over :-
     board_game_is_over1(B1),
