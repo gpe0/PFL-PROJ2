@@ -38,7 +38,7 @@ isXorY4or7(7, 4).
 isXorY4or7(7, 7).
 
 movePiece(X1, Y1, X2, Y2, Board, NewBoard) :-
-    isXorY4or7(X1, Y2),
+    isXorY4or7(X1, Y1),
     getPiece(X1, Y1, Board, Piece),
     setPiece(X1, Y1, Board, 7, TempBoard), % clear the previous space
     setPiece(X2, Y2, TempBoard, Piece, NewBoard).
@@ -192,6 +192,11 @@ inputHandler(Board, 3, Moves, X, Y, Piece) :-
     getPiece(TempX, TempY, Board, TempPiece),
     ((member(X-Y, Moves), X = TempX, Y = TempY, Piece = TempPiece); inputHandler(Board, 3, Moves, X, Y, Piece)).
 
+gameLoop(_, Board) :-
+    game_over(Board, Winner),
+    Winner < 3,
+    !,
+    format('WINNER IS PLAYER~d', [Winner]).
 
 gameLoop(0, Board) :-
     drawBoard(Board),
