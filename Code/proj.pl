@@ -32,10 +32,13 @@ setPiece(X, Y, Board, P, NewBoard) :-
 % =========================================================================
 % MOVEMENT
 % =========================================================================
+isXorY4or7(4, 4).
+isXorY4or7(4, 7).
+isXorY4or7(7, 4).
+isXorY4or7(7, 7).
 
 movePiece(X1, Y1, X2, Y2, Board, NewBoard) :-
-    (Y1 = 4 ; Y1 = 7),
-    (X1 = 4 ; X1 = 7),
+    isXorY4or7(X1, Y2),
     getPiece(X1, Y1, Board, Piece),
     setPiece(X1, Y1, Board, 7, TempBoard), % clear the previous space
     setPiece(X2, Y2, TempBoard, Piece, NewBoard).
@@ -114,8 +117,8 @@ test_vis(X, Y, Piece) :-
 
 main :-
     get_initial_board(Board),
-    %random_between(0, 1, RandomPlayer),
-    gameLoop(0, Board).
+    random(0, 2, RandomPlayer),
+    gameLoop(RandomPlayer, Board).
 
 
 clear_buffer:-
