@@ -410,6 +410,14 @@ game_over(Board, Winner) :-
     getPiece(7, 7, Board, P4),
     game_over_winner(P1, P2, P3, P4, Winner).
 
+gameOver(Winner) :-
+    board(Board),
+    getPiece(4, 4, Board, P1),
+    getPiece(7, 4, Board, P2),
+    getPiece(4, 7, Board, P3),
+    getPiece(7, 7, Board, P4),
+    game_over_winner(P1, P2, P3, P4, Winner).
+
 % game_over_winner(P1, P2, P3, P4, Winner)
 game_over_winner(P1, P2, P3, P4, 1) :-
     getPlayerPoints(P1, P2, P3, P4, 0, Points),
@@ -467,6 +475,7 @@ parseOption(_, _) :-
 
 :- dynamic playerType/2.
 :- dynamic board/1.
+:- dynamic playerTurn/1.
 
 /**
  * Player Type
@@ -475,9 +484,65 @@ parseOption(_, _) :-
  * - 2 => Greedy Bot
  */
 
-settings(10) :-
-    asserta(playerType(0, 2)),
-    asserta(playerType(1, 2)).
+displayWinnerMessage(Winner) :-
+    board(FinalBoard),
+    drawBoard(FinalBoard),
+    % To change %
+    format('WINNER IS ~d', [Winner]).
+
+turn(Board, _) :-
+    game_over(Board, Winner),
+    Winner < 3,
+    displayWinnerMessage(Winner),
+    !,
+    fail.
+turn(Board, Player) :-
+    findScaredPieces(Board, Player, ScaredPieces),
+    ScaredPieces  = [_|_],
+    !,
+    turn_action(Board, Player, ScaredPieces).
+turn(Board, Player) :-
+    valid_pieces(Board, Player, Pieces),
+    turn_action(Board, Player, Pieces).
+
+turn_action(Board, Player, PiecesToMove) :-
+    playerType(Player, 0),
+    turn_human(Board, Player, PiecesToMove).
+
+turn_action(Board, Player, PiecesToMove) :-
+    playerType(Player, 1),
+    turn_random(Board, Player, PiecesToMove).
+
+turn_action(Board, Player, PiecesToMove) :-
+    playerType(Player, 2),
+    turn_greedy(Board, Player, PiecesToMove).
+
+turn_human(Board, Player, PiecesToMove) :-
+    inputHandler(Board, Player, X, Y, Piece),
+    visualize_moves(X, Y, Piece, Board, 0, Moves),
+    Aux is Player + 2,
+    inputHandler(Board, Aux, Moves, ToX, ToY, _),
+    movePiece(X, Y, ToX, ToY, Board, NewBoard),
+    !,
+    setBoard(NewBoard).
+
+turn_random(Board, Player, PiecesToMove) :-
+    random_member(X-Y-Piece, PiecesToMove),
+    getMoves(X, Y, Piece, Board, Player, ValidMoves),
+    random_member(XF-YF, ValidMoves),
+    movePiece(X, Y, XF, YF, Board, NewBoard),
+    !,
+    setBoard(NewBoard).
+
+turn_greedy(Board, Player, Pieces) :-
+    generateBoards(Board, Player, Pieces, [], NewBoards),
+    evaluateBoards(NewBoards, Player, BoardsEvaluated),
+    sort(BoardsEvaluated, SortedBoards),
+    nth1(1, SortedBoards, V-_),
+    getBestBoards(SortedBoards, V, BestBoards),
+    !,
+    random_member(MoveChosen, BestBoards),
+    setBoard(MoveChosen).
 
 displayInitalMessage :-
     write('===== Barca Board Game ====='), nl,
@@ -486,29 +551,71 @@ displayInitalMessage :-
 
 displayGamemodes :-
     write('         GAME MODES         '), nl,
-    write(' 1. Human      vs Human     '), nl,
-    write(' 2. Human      vs Random Bot'), nl,
-    write(' 5. Human      vs Greedy Bot'), nl,
-    write(' 3. Random Bot vs Human     '), nl,
-    write(' 4. Random Bot vs Random Bot'), nl,
-    write(' 7. Random Bot vs Greedy Bot'), nl,
-    write(' 6. Greedy Bot vs Human     '), nl,
-    write(' 8. Greedy Bot vs Random Bot'), nl,
-    write('10. Greedy Bot vs Greedy Bot'), nl.
+    write('1. Human      vs Human     '), nl,
+    write('2. Human      vs Random Bot'), nl,
+    write('3. Human      vs Greedy Bot'), nl,
+    write('4. Random Bot vs Human     '), nl,
+    write('5. Random Bot vs Random Bot'), nl,
+    write('6. Random Bot vs Greedy Bot'), nl,
+    write('7. Greedy Bot vs Human     '), nl,
+    write('8. Greedy Bot vs Random Bot'), nl,
+    write('9. Greedy Bot vs Greedy Bot'), nl.
 
 getGamemode(Option) :-
     getInput(Input),
-    parseOption(Input, Option).
+    parseOption(Input, Option),
+    retractall(playerType(_,_)).
+
+setGamemode(1) :- asserta(playerType(0, 0)), asserta(playerType(1, 0)).
+setGamemode(2) :- asserta(playerType(0, 0)), asserta(playerType(1, 1)).
+setGamemode(3) :- asserta(playerType(0, 0)), asserta(playerType(1, 2)).
+setGamemode(4) :- asserta(playerType(0, 1)), asserta(playerType(1, 0)).
+setGamemode(5) :- asserta(playerType(0, 1)), asserta(playerType(1, 1)).
+setGamemode(6) :- asserta(playerType(0, 1)), asserta(playerType(1, 2)).
+setGamemode(7) :- asserta(playerType(0, 2)), asserta(playerType(1, 0)).
+setGamemode(8) :- asserta(playerType(0, 2)), asserta(playerType(1, 1)).
+setGamemode(9) :- asserta(playerType(0, 2)), asserta(playerType(1, 2)).
 
 readPlayerMode :-
     repeat,
     displayGamemodes,
-    getGamemode(Option).
+    getGamemode(Option),
+    setGamemode(Option).
 
 menu :-
     displayInitalMessage,
     readPlayerMode.
 
+switchPlayer :-
+    playerTurn(0),
+    retract(playerTurn(0)),
+    asserta(playerTurn(1)),
+    !. 
+switchPlayer :-
+    playerTurn(1),
+    retract(playerTurn(1)),
+    asserta(playerTurn(0)). 
+
+setBoard(Board) :-
+    retractall(board(_)),
+    asserta(board(Board)).
+
+startGame :-
+    get_initial_board(InitialBoard),
+    retractall(playerTurn(_)),
+    asserta(playerTurn(0)),
+    setBoard(InitialBoard),
+    !,
+    repeat,
+    board(B),
+    drawBoard(B),
+    playerTurn(Player),
+    turn(B, Player),
+    switchPlayer,
+    gameOver(Winner),
+    Winner < 3,
+    displayWinnerMessage(Winner).
+
 play :-
-    retractall(playerType(_,_)),
-    menu.
+    menu,
+    startGame.

@@ -108,4 +108,5 @@ drawRowLoop(Index, [H|T]) :-
 drawBoard(Board) :- 
     drawHeader,
     drawRowLoop(10, Board),
-    drawFooter.
+    drawFooter,
+    !.
