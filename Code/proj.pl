@@ -51,6 +51,17 @@ movePiece(X1, Y1, X2, Y2, Board, NewBoard) :-
 % getMoves(X, Y, Piece, Board, Player, Moves)
 getMoves(X, Y, P, Board, Player, Moves) :-
     mouse(P),
+    expand_up_down(X, Y, Board, Player, P, Moves).
+getMoves(X, Y, P, Board, Player, Moves) :-
+    lion(P),
+    expand_diagonal(X, Y, Board, Player, P, Moves).
+getMoves(X, Y, P, Board, Player, Moves) :-
+    elephant(P),
+    expand_up_down(X, Y, Board, Player, P, Moves1),
+    expand_diagonal(X, Y, Board, Player, P, Moves2),
+    append(Moves1, Moves2, Moves).
+
+expand_up_down(X, Y, Board, Player, P, Moves) :-
     expand(X, Y, -1, 0, Board, Player, P, Left),
     expand(X, Y, 1, 0, Board, Player, P, Right),
     expand(X, Y, 0, 1, Board, Player, P, Top),
@@ -58,8 +69,8 @@ getMoves(X, Y, P, Board, Player, Moves) :-
     append(Left, Right, M1),
     append(M1, Top, M2),
     append(M2, Down, Moves).
-getMoves(X, Y, P, Board, Player, Moves) :-
-    lion(P),
+
+expand_diagonal(X, Y, Board, Player, P, Moves) :-
     expand(X, Y, -1, -1, Board, Player, P, DL),
     expand(X, Y, 1, 1, Board, Player, P, TR),
     expand(X, Y, -1, 1, Board, Player, P, TL),
@@ -67,11 +78,6 @@ getMoves(X, Y, P, Board, Player, Moves) :-
     append(DL, DR, D),
     append(TL, TR, T),
     append(D, T, Moves).
-getMoves(X, Y, P, Board, Player, Moves) :-
-    elephant(P),
-    getMoves(X, Y, 2, Board, Player, Moves1),
-    getMoves(X, Y, 3, Board, Player, Moves2),
-    append(Moves1, Moves2, Moves).
 
 expand(X, Y, StepX, StepY, Board, Player, Piece, Moves) :-
     X1 is X + StepX,
@@ -90,7 +96,7 @@ expand_acc(X, Y, StepX, StepY, Board, Player, Piece, Acc, Result) :-
     expand_acc(X1, Y1, StepX, StepY, Board, Player, Piece, Acc, Result).
 expand_acc(X, Y, StepX, StepY, Board, Player, Piece, Acc, Result) :-
     getPiece(X, Y, Board, V),
-    (V =:= 0 ; V =:= 7),
+    empty(V),
     A1 = [X-Y|Acc],
     X1 is X + StepX,
     Y1 is Y + StepY,
@@ -325,12 +331,9 @@ bots_loop_aux(Player, Board, Pieces) :-
 % FEAR MECHANIC
 % =========================================================================
 
-scared(2,6).
-scared(5,3).
-scared(3,4).
-scared(6,1).
-scared(1,5).
-scared(4,2).
+scared(P1, P2) :- lion(P1), elephant(P2).
+scared(P1, P2) :- elephant(P1), mouse(P2).
+scared(P1, P2) :- mouse(P1), lion(P2).
 
 findScaredPieces(Board, Player, Pieces) :-
     valid_pieces(Board, Player, ValidPieces),
@@ -343,29 +346,21 @@ findScaredPiecesAux(Board, Player, [X-Y-P|T], Acc, ScaredPieces) :-
 findScaredPiecesAux(Board, Player, [_|T], Acc, ScaredPieces) :-
     findScaredPiecesAux(Board, Player, T, Acc, ScaredPieces).
 
-% UGLY CODE ALERT %
+adjacent(X, Y, X1, Y) :- X1 is X + 1.
+adjacent(X, Y, X1, Y) :- X1 is X - 1.
+adjacent(X, Y, X1, Y1) :- X1 is X + 1, Y1 is Y + 1.
+adjacent(X, Y, X1, Y1) :- X1 is X + 1, Y1 is Y - 1.
+adjacent(X, Y, X1, Y1) :- X1 is X - 1, Y1 is Y - 1.
+adjacent(X, Y, X1, Y1) :- X1 is X - 1, Y1 is Y + 1.
+adjacent(X, Y, X, Y1) :- Y1 is Y + 1.
+adjacent(X, Y, X, Y1) :- Y1 is Y - 1.
+
 isScared(X, Y, Board, Player, P) :-
-    X1 is X - 1,
-    X2 is X + 1,
-    Y1 is Y - 1,
-    Y2 is Y + 1,
-    getPiece(X, Y1, Board, P1),
-    getPiece(X, Y2, Board, P2),
-    getPiece(X1, Y, Board, P3),
-    getPiece(X1, Y1, Board, P4),
-    getPiece(X1, Y2, Board, P5),
-    getPiece(X2, Y, Board, P6),
-    getPiece(X2, Y1, Board, P7),
-    getPiece(X2, Y2, Board, P8),
     OtherPlayer is 1 - Player,
-    ((playerPiece(P1, OtherPlayer), scared(P, P1)); 
-    (playerPiece(P2, OtherPlayer), scared(P, P2));
-    (playerPiece(P3, OtherPlayer), scared(P, P3));
-    (playerPiece(P4, OtherPlayer), scared(P, P4));
-    (playerPiece(P5, OtherPlayer), scared(P, P5));
-    (playerPiece(P6, OtherPlayer), scared(P, P6));
-    (playerPiece(P7, OtherPlayer), scared(P, P7));
-    (playerPiece(P8, OtherPlayer), scared(P, P8))).
+    adjacent(X, Y, X1, Y1),
+    getPiece(X1, Y1, Board, NeighPiece),
+    playerPiece(NeighPiece, OtherPlayer),
+    scared(P, NeighPiece).
 
 test_scare :-
     board_scared_1(B),
@@ -392,23 +387,14 @@ playerPiece(4, 1).
 playerPiece(5, 1).
 playerPiece(6, 1).
 
-% playerPiece(Piece, Player, Value)
-% Value = 1 on success
-% Value = 0 on fail
-% This function will help game over be more efficient
-playerPieceValue(1, 0, 1).
-playerPieceValue(2, 0, 1).
-playerPieceValue(3, 0, 1).
-playerPieceValue(4, 1, 1).
-playerPieceValue(5, 1, 1).
-playerPieceValue(6, 1, 1).
-playerPieceValue(_, _, 0).
+boolToInt(Pred, 1) :- call(Pred).
+boolToInt(_, 0).
 
 getPlayerPoints(P1, P2, P3, P4, Player, Points) :-
-    playerPieceValue(P1, Player, V1),
-    playerPieceValue(P2, Player, V2),
-    playerPieceValue(P3, Player, V3),
-    playerPieceValue(P4, Player, V4),
+    boolToInt(playerPiece(P1, Player), V1),
+    boolToInt(playerPiece(P2, Player), V2),
+    boolToInt(playerPiece(P3, Player), V3),
+    boolToInt(playerPiece(P4, Player), V4),
     Points is V1 + V2 + V3 + V4.
 
 % game_over(+GameState, -Winner)
