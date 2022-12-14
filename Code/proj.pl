@@ -315,37 +315,34 @@ playerPiece(6, 1).
 boolToInt(Pred, 1) :- call(Pred).
 boolToInt(_, 0).
 
-getPlayerPoints(P1, P2, P3, P4, Player, Points) :-
-    boolToInt(playerPiece(P1, Player), V1),
-    boolToInt(playerPiece(P2, Player), V2),
-    boolToInt(playerPiece(P3, Player), V3),
-    boolToInt(playerPiece(P4, Player), V4),
-    Points is V1 + V2 + V3 + V4.
+getPlayerPoints([], _, Acc, Acc).
+getPlayerPoints([H|T], Player, Acc, Points) :-
+    boolToInt(playerPiece(H, Player), Point),
+    Acc1 is Acc + Point,
+    getPlayerPoints(T, Player, Acc1, Points).
+
+getTargetPieces(Board, L) :- 
+    findall(P, (isXorY4or7(X, Y),getPiece(X,Y,Board,P)), L).
 
 % gameOver(+GameState, -Winner)
+% TEMPORARY FUNCTION JUST USED ON TESTS
 gameOver(Board, Winner) :-
-    getPiece(4, 4, Board, P1),
-    getPiece(7, 4, Board, P2),
-    getPiece(4, 7, Board, P3),
-    getPiece(7, 7, Board, P4),
-    gameOverWinner(P1, P2, P3, P4, Winner).
+    getTargetPieces(Board, Pieces),
+    gameOverWinner(Pieces, Winner).
 
 gameOver(Winner) :-
     board(Board),
-    getPiece(4, 4, Board, P1),
-    getPiece(7, 4, Board, P2),
-    getPiece(4, 7, Board, P3),
-    getPiece(7, 7, Board, P4),
-    gameOverWinner(P1, P2, P3, P4, Winner).
+    getTargetPieces(Board, Pieces),
+    gameOverWinner(Pieces, Winner).
 
 % gameOverWinner(P1, P2, P3, P4, Winner)
-gameOverWinner(P1, P2, P3, P4, 1) :-
-    getPlayerPoints(P1, P2, P3, P4, 0, Points),
+gameOverWinner(Pieces, 1) :-
+    getPlayerPoints(Pieces, 0, 0, Points),
     Points > 2.
-gameOverWinner(P1, P2, P3, P4, 2) :-
-    getPlayerPoints(P1, P2, P3, P4, 1, Points),
+gameOverWinner(Pieces, 2) :-
+    getPlayerPoints(Pieces, 1, 0, Points),
     Points > 2.
-gameOverWinner(_,_,_,_,3).
+gameOverWinner(_,3).
 
 % =========================================================================
 % INPUT
@@ -393,36 +390,47 @@ parseOption(_, _) :-
 displayWinnerMessage(Winner) :-
     board(FinalBoard),
     drawBoard(FinalBoard),
-    % To change %
-    format('WINNER IS ~d', [Winner]).
+    % To change
+    write('============================'), nl,
+    format('=        PLAYER ~d          =', [Winner]), nl,
+    write('=          WINS!           ='), nl,
+    write('============================'), nl.
 
+% Test if game is over
 turn(Board, _) :-
     gameOver(Board, Winner),
     Winner < 3,
     displayWinnerMessage(Winner),
     !,
     fail.
+% Test if player has scared pieces
+% If yes, he needs to play them
 turn(Board, Player) :-
     findScaredPieces(Board, Player, ScaredPieces),
     ScaredPieces  = [_|_],
     !,
     turn_action(Board, Player, ScaredPieces).
+% Otherwise, play a normal turn
 turn(Board, Player) :-
     valid_pieces(Board, Player, Pieces),
     turn_action(Board, Player, Pieces).
 
+% If Player is Human
 turn_action(Board, Player, PiecesToMove) :-
     playerType(Player, 0),
     turn_human(Board, Player, PiecesToMove).
 
+% If Player is Random
 turn_action(Board, Player, PiecesToMove) :-
     playerType(Player, 1),
     turn_random(Board, Player, PiecesToMove).
 
+% If Player is Greedy
 turn_action(Board, Player, PiecesToMove) :-
     playerType(Player, 2),
     turn_greedy(Board, Player, PiecesToMove).
 
+% Handle Human Turn
 turn_human(Board, Player, PiecesToMove) :-
     inputHandler(Board, Player, X, Y, Piece),
     visualize_moves(X, Y, Piece, Board, 0, Moves),
@@ -432,6 +440,7 @@ turn_human(Board, Player, PiecesToMove) :-
     !,
     setBoard(NewBoard).
 
+% Handle Random Turn
 turn_random(Board, Player, PiecesToMove) :-
     random_member(X-Y-Piece, PiecesToMove),
     getMoves(X, Y, Piece, Board, Player, ValidMoves),
@@ -440,6 +449,7 @@ turn_random(Board, Player, PiecesToMove) :-
     !,
     setBoard(NewBoard).
 
+% Handle Greedy Turn
 turn_greedy(Board, Player, Pieces) :-
     generateBoards(Board, Player, Pieces, [], NewBoards),
     evaluateBoards(NewBoards, Player, BoardsEvaluated),
