@@ -123,47 +123,52 @@ main :-
     random(0, 2, RandomPlayer),
     gameLoop(RandomPlayer, Board).
 
-
-clear_buffer:-
+clear_buffer :-
     repeat,
     get_char(C),
     C = '\n'.
 
-read_number(X):-
-    read_number_aux(X,0).
 
-read_number_aux(X,Acc):- 
-    get_code(C),
-    C >= 48,
-    C =< 57,
-    !,
-    Acc1 is 10*Acc + (C - 48),
-    read_number_aux(X,Acc1).
-read_number_aux(X,X).
+read_number(L, X) :- read_number_aux(L, X, 0).
 
-getX(XCode, X) :-
+read_number_aux([], X, X).
+read_number_aux([H|T], X, Acc) :- 
+    getVal(H, Val),
+    Acc1 is Acc * 10 + Val,
+    read_number_aux(T, X, Acc1).
+
+getVal(XCode, X) :-
     XCode < 97,
+    XCode > 64,
     X is XCode - 64.
 
-getX(XCode, X) :-
+getVal(XCode, X) :-
     XCode > 96,
     X is XCode - 96.
 
-getInput(0, X, Y) :-
-    write('[Player 1] Choose the piece to move:'),
-    get_code(XCode),
-    read_number(YInput),
-    getX(XCode, X),
+getVal(XCode, X) :-
+    XCode < 65,
+    X is XCode - 48.
+
+
+writeStatus(0) :- write('[Player 1] Choose the piece to move:').
+writeStatus(1) :- write('[Player 2] Choose the piece to move:').
+writeStatus(2) :- write('[Player 1] Choose the piece destination:').
+writeStatus(3) :- write('[Player 2] Choose the piece destination:').
+
+
+getInput(Mode, X, Y) :-
+    writeStatus(Mode),
+    getInput(In),
+    In = [H|T],
+    read_number(T, YInput),
+    getVal(H, X),
     Y is 11 - YInput,
+    write(YInput), nl,
     nl.
 
-getInput(1, X, Y) :-
-    write('[Player 2] Choose the piece to move:'),
-    get_code(XCode),
-    read_number(YInput),
-    getX(XCode, X),
-    Y is 11 - YInput,
-    nl.
+getInput(_, 99, 99) .
+
 
 %inputHandler(+Board, +manageMode, ?X, ?Y, ?Piece)
 inputHandler(Board, 0, X, Y, Piece) :-
@@ -180,12 +185,12 @@ inputHandler(Board, 1, X, Y, Piece) :-
 
 %inputHandler(+Board, +manageMode, +Moves, ?X, ?Y, ?Piece)
 inputHandler(Board, 2, Moves, X, Y, Piece) :-
-    getInput(0, TempX, TempY),
+    getInput(2, TempX, TempY),
     getPiece(TempX, TempY, Board, TempPiece),
     ((member(X-Y, Moves), X = TempX, Y = TempY, Piece = TempPiece); inputHandler(Board, 2, Moves, X, Y, Piece)).
 
 inputHandler(Board, 3, Moves, X, Y, Piece) :-
-    getInput(1, TempX, TempY),
+    getInput(3, TempX, TempY),
     getPiece(TempX, TempY, Board, TempPiece),
     ((member(X-Y, Moves), X = TempX, Y = TempY, Piece = TempPiece); inputHandler(Board, 3, Moves, X, Y, Piece)).
 
