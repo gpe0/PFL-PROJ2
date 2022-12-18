@@ -220,15 +220,15 @@ gameLoop(1, Board) :-
 % AI RANDOM BOT
 % =========================================================================
 
-valid_pieces(Board, Player, Pieces) :-
-    findall(X-Y-P, valid_pieces_aux(X, Y, Board, Player, P), Pieces).
+validPieces(Board, Player, Pieces) :-
+    findall(X-Y-P, validPiecesAux(X, Y, Board, Player, P), Pieces).
 
-valid_pieces_aux(X, Y, Board, Player, P) :-
+validPiecesAux(X, Y, Board, Player, P) :-
     getPiece(X, Y, Board, P),
     playerPiece(P, Player).
 
 getRandomPiece(Board, Player, X-Y-Piece) :-
-    valid_pieces(Board, Player, ValidPieces),
+    validPieces(Board, Player, ValidPieces),
     random_member(X-Y-Piece, ValidPieces).
 
 getRandomMove(Board, Player, X-Y-Piece, XF-YF) :-
@@ -252,17 +252,17 @@ generateBoardsAux(Board, X-Y-Piece, [XF-YF|RestMoves], Acc, Boards) :-
 generateBoardsAux(_,_,_,Acc,Acc).
 
 evaluate(Board, Player, Value) :-
-    getPiece(4, 4, Board, P1),
-    getPiece(7, 4, Board, P2),
-    getPiece(4, 7, Board, P3),
-    getPiece(7, 7, Board, P4),
-    getPlayerPoints(P1, P2, P3, P4, Player, Points),
-    findScaredPieces(Board, Player, ScaredPlayer),
+    % Evaluate objectives
+    getTargetPieces(Board, TargetPieces),
+    getPlayerPoints(TargetPieces, Player, 0, Points),
+    % Evaluate Pieces
     OtherPlayer is 1 - Player,
     findScaredPieces(Board, OtherPlayer, ScaredOtherPlayer),
+    findScaredPieces(Board, Player, ScaredPlayer),
     length(ScaredPlayer, NumScaredPlayer),
     length(ScaredOtherPlayer, NumScaredOtherPlayer),
-    Value is Points * -100 + NumScaredPlayer - NumScaredOtherPlayer.
+    % Formula
+    Value is -100 * Points + NumScaredPlayer - NumScaredOtherPlayer.
 
 evaluateBoards([], _, []).
 evaluateBoards([B|RestBoards], Player, [V-B|RT]) :-
@@ -417,7 +417,7 @@ turn(Board, Player) :-
     turn_action(Board, Player, ScaredPieces).
 % Otherwise, play a normal turn
 turn(Board, Player) :-
-    valid_pieces(Board, Player, Pieces),
+    validPieces(Board, Player, Pieces),
     turn_action(Board, Player, Pieces).
 
 % If Player is Human
@@ -516,6 +516,8 @@ switchPlayer :-
     playerTurn(1),
     retract(playerTurn(1)),
     asserta(playerTurn(0)). 
+switchPlayer :-
+    asserta(playerTurn(0)).
 
 setBoard(Board) :-
     retractall(board(_)),
@@ -524,8 +526,7 @@ setBoard(Board) :-
 startGame :-
     get_initial_board(InitialBoard),
     setBoard(InitialBoard),
-    retractall(playerTurn(_)),
-    asserta(playerTurn(0)),
+    switchPlayer, % Will set player 0 turn
     !,
     repeat,
     board(B),
