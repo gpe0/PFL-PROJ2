@@ -2,6 +2,19 @@
 % BOARD
 % =========================================================================
 
+test_getPiece :-
+    get_initial_board(B),
+    getPiece(1, 1, B, 0),
+    getPiece(5, 1, B, 4),
+    getPiece(-5, -5, B, 99).
+
+test_setPiece :-
+    get_initial_board(B),
+    getPiece(1, 1, B, 0),
+    setPiece(1, 1, B, 5, NB),
+    getPiece(1, 1, NB, 5).
+
+% Visualization test (don't fail)
 test_vis(X, Y, Piece) :-
     get_initial_board(B),
     visualize_moves(X, Y, Piece, B, 0, _).
@@ -10,60 +23,18 @@ test_vis(X, Y, Piece) :-
 % AI RANDOM BOT
 % =========================================================================
 
-test :-
+test_validPieces :-
+    get_initial_board(Board),
+    validPieces(Board, 0, Pieces),
+    sort(Pieces, [4-9-3, 5-9-2, 5-10-1, 6-9-2, 6-10-1, 7-9-3]).
+
+test_random_bot :-
     get_initial_board(Board),
     getRandomPiece(Board, 1, X-Y-Piece),
     getRandomMove(Board, 1, X-Y-Piece, XF-YF),
     write('Piece: '), write(Piece), nl,
     write('Current Position: '), write(X-Y), nl,
     write('Move Position: '), write(XF-YF).
-
-% =========================================================================
-% AI BIG BRAIN BOT
-% =========================================================================
-
-test_all :-
-    Player = 1,
-    get_initial_board(Board),
-    valid_pieces(Board, Player, ValidPieces),
-    generateBoards(Board, Player, ValidPieces, [], NewBoards),
-    evaluateBoards(NewBoards, Player, BoardsEvaluated),
-    sort(BoardsEvaluated, SortedBoards),
-    nth1(1, SortedBoards, V-_),
-    getBestBoards(SortedBoards, V, BestBoards),
-    random_member(MoveChosen, BestBoards),
-    drawBoard(MoveChosen).
-
-bots_main :-
-    get_initial_board(Board),
-    drawBoard(Board),
-    bots_loop(0, Board).
-
-bots_loop(_, Board) :-
-    gameOver(Board, Winner),
-    Winner < 3,
-    format('WINNER IS ~d', [Winner]).
-bots_loop(Player, Board) :-
-    findScaredPieces(Board, Player, ScaredPieces),
-    ScaredPieces  = [_|_],
-    write('Has scared pieces.'), nl, write(ScaredPieces), nl,
-    bots_loop_aux(Player, Board, ScaredPieces).
-bots_loop(Player, Board) :-
-    valid_pieces(Board, Player, Pieces),
-    write('Free game.'), nl,
-    bots_loop_aux(Player, Board, Pieces).
-
-bots_loop_aux(Player, Board, Pieces) :-
-    generateBoards(Board, Player, Pieces, [], NewBoards),
-    evaluateBoards(NewBoards, Player, BoardsEvaluated),
-    sort(BoardsEvaluated, SortedBoards),
-    nth1(1, SortedBoards, V-_),
-    getBestBoards(SortedBoards, V, BestBoards),
-    random_member(MoveChosen, BestBoards),
-
-    Other is 1 - Player,
-    drawBoard(MoveChosen),
-    bots_loop(Other, MoveChosen).
 
 % =========================================================================
 % FEAR MECHANIC
