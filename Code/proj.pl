@@ -123,98 +123,57 @@ main :-
     random(0, 2, RandomPlayer),
     gameLoop(RandomPlayer, Board).
 
-clear_buffer :-
-    repeat,
-    get_char(C),
-    C = '\n'.
+letterToIndex(Letter, X) :-
+    Letter > 64,
+    Letter < 75,
+    X is Letter - 64.
 
-
-read_number(L, X) :- read_number_aux(L, X, 0).
-
-read_number_aux([], X, X).
-read_number_aux([H|T], X, Acc) :- 
-    getVal(H, Val),
-    Acc1 is Acc * 10 + Val,
-    read_number_aux(T, X, Acc1).
-
-getVal(XCode, X) :-
-    XCode < 97,
-    XCode > 64,
-    X is XCode - 64.
-
-getVal(XCode, X) :-
-    XCode > 96,
-    X is XCode - 96.
-
-getVal(XCode, X) :-
-    XCode < 65,
-    X is XCode - 48.
-
+letterToIndex(Letter, X) :-
+    Letter > 96,
+    Letter < 107,
+    X is Letter - 96.
 
 writeStatus(0) :- write('[Player 1] Choose the piece to move:').
 writeStatus(1) :- write('[Player 2] Choose the piece to move:').
 writeStatus(2) :- write('[Player 1] Choose the piece destination:').
 writeStatus(3) :- write('[Player 2] Choose the piece destination:').
 
-
 getInput(Mode, X, Y) :-
     writeStatus(Mode),
-    getInput(In),
-    In = [H|T],
-    read_number(T, YInput),
-    getVal(H, X),
-    Y is 11 - YInput,
-    write(YInput), nl,
-    nl.
+    getInput([Letter|Number]),
+    readNumber(Number, YInput),
+    letterToIndex(Letter, X),
+    Y is 11 - YInput.
+getInput(Mode, X, Y) :-
+    write('error: Invalid input, try again!'), nl, nl,
+    getInput(Mode, X, Y).
 
-getInput(_, 99, 99) .
+readPositon(X, Y, Piece, Board, Player) :-
+    getInput(Player, X, Y),
+    getPiece(X, Y, Board, Piece),
+    playerPiece(Piece, Player).
 
+readDestination(X, Y, Moves, Player) :-
+    Mode is Player + 2,
+    getInput(Mode, X, Y),
+    member(X-Y, Moves).
 
-%inputHandler(+Board, +manageMode, ?X, ?Y, ?Piece)
-inputHandler(Board, 0, X, Y, Piece) :-
-    getInput(0, TempX, TempY),
-    getPiece(TempX, TempY, Board, TempPiece),
-    (((TempPiece = 1 ; TempPiece = 2 ; TempPiece = 3), X = TempX, Y = TempY, Piece = TempPiece); inputHandler(Board, 0, X, Y, Piece)).
-
-
-inputHandler(Board, 1, X, Y, Piece) :-
-    getInput(1, TempX, TempY),
-    getPiece(TempX, TempY, Board, TempPiece),
-    (((TempPiece = 4 ; TempPiece = 5 ; TempPiece = 6), X = TempX, Y = TempY, Piece = TempPiece); inputHandler(Board, 1, X, Y, Piece)).
-
-
-%inputHandler(+Board, +manageMode, +Moves, ?X, ?Y, ?Piece)
-inputHandler(Board, 2, Moves, X, Y, Piece) :-
-    getInput(2, TempX, TempY),
-    getPiece(TempX, TempY, Board, TempPiece),
-    ((member(X-Y, Moves), X = TempX, Y = TempY, Piece = TempPiece); inputHandler(Board, 2, Moves, X, Y, Piece)).
-
-inputHandler(Board, 3, Moves, X, Y, Piece) :-
-    getInput(3, TempX, TempY),
-    getPiece(TempX, TempY, Board, TempPiece),
-    ((member(X-Y, Moves), X = TempX, Y = TempY, Piece = TempPiece); inputHandler(Board, 3, Moves, X, Y, Piece)).
-
+% TO DELETE
 gameLoop(_, Board) :-
     gameOver(Board, Winner),
     Winner < 3,
     !,
     format('WINNER IS PLAYER~d', [Winner]).
 
-gameLoop(0, Board) :-
+% TO DELETE
+gameLoop(Player, Board) :-
     drawBoard(Board),
-    inputHandler(Board, 0, X, Y, Piece),
-    visualize_moves(X, Y, Piece, Board, 0, Moves),
-    inputHandler(Board, 2, Moves, ToX, ToY, _),
-    movePiece(X, Y, ToX, ToY, Board, NewBoard),
-    gameLoop(1, NewBoard).
-
-gameLoop(1, Board) :-
-    drawBoard(Board),
-    inputHandler(Board, 1, X, Y, Piece),
-    visualize_moves(X, Y, Piece, Board, 1, Moves),
-    inputHandler(Board, 3, Moves, ToX, ToY, _),
-    movePiece(X, Y, ToX, ToY, Board, NewBoard),
-    gameLoop(0, NewBoard).  
+    readPositon(X, Y, Piece, Board, Player),
+    visualize_moves(X, Y, Piece, Board, Player, Moves),
+    readDestination(XF, YF, Moves, Player),
+    movePiece(X, Y, XF, YF, Board, NewBoard),
+    OtherPlayer is 1 - Player,
+    gameLoop(OtherPlayer, NewBoard).
 
 % =========================================================================
 % AI RANDOM BOT
@@ -437,11 +396,11 @@ turn_action(Board, Player, PiecesToMove) :-
 
 % Handle Human Turn
 turn_human(Board, Player, PiecesToMove) :-
-    inputHandler(Board, Player, X, Y, Piece),
-    visualize_moves(X, Y, Piece, Board, 0, Moves),
-    Aux is Player + 2,
-    inputHandler(Board, Aux, Moves, ToX, ToY, _),
-    movePiece(X, Y, ToX, ToY, Board, NewBoard),
+    % TODO FORCE THE PIECE TO BE IN PIECESTOMOVE
+    readPositon(X, Y, Piece, Board, Player),
+    visualize_moves(X, Y, Piece, Board, Player, Moves),
+    readDestination(XF, YF, Moves, Player),
+    movePiece(X, Y, XF, YF, Board, NewBoard),
     !,
     setBoard(NewBoard).
 

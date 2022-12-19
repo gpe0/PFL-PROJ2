@@ -53,6 +53,10 @@ test_fix_bug :-
     board_bug_scared(B),
     bots_loop(1, B).
 
+test_scare_wikipedia_example :-
+    board_scared_3(B),
+    visualize_moves(5, 5, 1, B, 0, _).
+
 % =========================================================================
 % GAME OVER
 % =========================================================================
