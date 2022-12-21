@@ -4,6 +4,7 @@
 :- ensure_loaded('boards.pl').
 :- ensure_loaded('view.pl').
 :- ensure_loaded('tests.pl').
+:- ensure_loaded('stats.pl').
 
 % =========================================================================
 % BOARD
@@ -52,15 +53,18 @@ movePiece(X1, Y1, X2, Y2, Board, NewBoard) :-
 % getMoves(X, Y, Piece, Board, Player, Moves)
 getMoves(X, Y, P, Board, Player, Moves) :-
     mouse(P),
-    expand_up_down(X, Y, Board, Player, P, Moves).
+    expand_up_down(X, Y, Board, Player, P, Moves),
+    !.
 getMoves(X, Y, P, Board, Player, Moves) :-
     lion(P),
-    expand_diagonal(X, Y, Board, Player, P, Moves).
+    expand_diagonal(X, Y, Board, Player, P, Moves),
+    !.
 getMoves(X, Y, P, Board, Player, Moves) :-
     elephant(P),
     expand_up_down(X, Y, Board, Player, P, Moves1),
     expand_diagonal(X, Y, Board, Player, P, Moves2),
-    append(Moves1, Moves2, Moves).
+    append(Moves1, Moves2, Moves),
+    !.
 
 expand_up_down(X, Y, Board, Player, P, Moves) :-
     expand(X, Y, -1, 0, Board, Player, P, Left),
@@ -184,7 +188,8 @@ validPieces(Board, Player, Pieces) :-
 
 validPiecesAux(X, Y, Board, Player, P) :-
     getPiece(X, Y, Board, P),
-    playerPiece(P, Player).
+    playerPiece(P, Player),
+    getMoves(X, Y, P, Board, Player, [_|_]).
 
 getRandomPiece(Board, Player, X-Y-Piece) :-
     validPieces(Board, Player, ValidPieces),
@@ -244,8 +249,7 @@ findScaredPieces(Board, Player, Pieces) :-
     findall(X-Y-P, findScaredPiecesAux(X, Y, Board, Player, P), Pieces).
 
 findScaredPiecesAux(X, Y, Board, Player, P) :-
-    getPiece(X, Y, Board, P),
-    playerPiece(P, Player),
+    validPiecesAux(X, Y, Board, Player, P),
     isScared(X, Y, Board, Player, P).
 
 adjacent(X, Y, X1, Y) :- X1 is X + 1.
@@ -285,8 +289,11 @@ getPlayerPoints([H|T], Player, Acc, Points) :-
     Acc1 is Acc + Point,
     getPlayerPoints(T, Player, Acc1, Points).
 
-getTargetPieces(Board, L) :- 
-    findall(P, (isXorY4or7(X, Y),getPiece(X,Y,Board,P)), L).
+getTargetPieces(Board, [P1,P2,P3,P4]) :- 
+    getPiece(4, 7,Board, P1),
+    getPiece(7, 7,Board, P2),
+    getPiece(4, 4,Board, P3),
+    getPiece(7, 4,Board, P4).
 
 % gameOver(+GameState, -Winner)
 % TEMPORARY FUNCTION JUST USED ON TESTS
@@ -302,10 +309,12 @@ gameOver(Winner) :-
 % gameOverWinner(P1, P2, P3, P4, Winner)
 gameOverWinner(Pieces, 1) :-
     getPlayerPoints(Pieces, 0, 0, Points),
-    Points > 2.
+    Points > 2,
+    !.
 gameOverWinner(Pieces, 2) :-
     getPlayerPoints(Pieces, 1, 0, Points),
-    Points > 2.
+    Points > 2,
+    !.
 gameOverWinner(_,3).
 
 % =========================================================================
@@ -360,20 +369,13 @@ displayWinnerMessage(Winner) :-
     write('=          WINS!           ='), nl,
     write('============================'), nl.
 
-% Test if game is over
-turn(Board, _) :-
-    gameOver(Board, Winner),
-    Winner < 3,
-    displayWinnerMessage(Winner),
-    !,
-    fail.
 % Test if player has scared pieces
 % If yes, he needs to play them
 turn(Board, Player) :-
     findScaredPieces(Board, Player, ScaredPieces),
     ScaredPieces  = [_|_],
-    !,
-    turn_action(Board, Player, ScaredPieces).
+    turn_action(Board, Player, ScaredPieces),
+    !.
 % Otherwise, play a normal turn
 turn(Board, Player) :-
     validPieces(Board, Player, Pieces),
@@ -468,13 +470,14 @@ menu :-
 
 switchPlayer :-
     playerTurn(0),
-    retract(playerTurn(0)),
+    retractall(playerTurn(_)),
     asserta(playerTurn(1)),
     !. 
 switchPlayer :-
     playerTurn(1),
-    retract(playerTurn(1)),
-    asserta(playerTurn(0)). 
+    retractall(playerTurn(_)),
+    asserta(playerTurn(0)),
+    !.
 switchPlayer :-
     asserta(playerTurn(0)).
 

@@ -28,6 +28,12 @@ test_validPieces :-
     validPieces(Board, 0, Pieces),
     sort(Pieces, [4-9-3, 5-9-2, 5-10-1, 6-9-2, 6-10-1, 7-9-3]).
 
+test_2 :-
+    board_stuck_bug(B),
+    drawBoard(B),
+    validPieces(B, 1, P),
+    write(P).
+
 test_random_bot :-
     get_initial_board(Board),
     getRandomPiece(Board, 1, X-Y-Piece),
