@@ -394,6 +394,11 @@ turn_action(Board, Player, PiecesToMove) :-
     playerType(Player, 2),
     turn_greedy(Board, Player, PiecesToMove).
 
+% If Player is Greedy (MinMax)
+turn_action(Board, Player, PiecesToMove) :-
+    playerType(Player, 3),
+    turn_greedy_minmax(Board, Player, PiecesToMove).
+
 % Handle Human Turn
 turn_human(Board, Player, PiecesToMove) :-
     % TODO FORCE THE PIECE TO BE IN PIECESTOMOVE
@@ -424,6 +429,29 @@ turn_greedy(Board, Player, Pieces) :-
     random_member(MoveChosen, BestBoards),
     setBoard(MoveChosen).
 
+% MinMax BIG BRAIN Bot
+
+turn_greedy_minmax(Board, Player, Pieces) :-
+    nextLevelBoards([Board], Player, [], Lv1),
+    nextLevelBoards(Lv1, Player, [], Lv2),
+    evaluateBoards(Lv2, Player, BoardsEvaluated),
+    sort(BoardsEvaluated, SortedBoards),
+    SortedBoards = [V-_|_],
+    getBestBoards(SortedBoards, V, BestBoards),
+    !,
+    random_member(MoveChosen, BestBoards),
+    setBoard(MoveChosen).
+
+nextLevelBoards([], Player, Acc, Acc).
+nextLevelBoards([CurrentBoard | Rest], Player, Acc, Res) :-
+    validPieces(CurrentBoard, Player, Pieces),
+    generateBoards(CurrentBoard, Player, Pieces, [], NextBoard),
+    !,
+    append(Acc, NextBoard, Temp),
+    nextLevelBoards(Rest, Player, Temp, Res).
+
+
+
 displayInitalMessage :-
     write('===== Barca Board Game ====='), nl,
     write('          PFL 22/23         '), nl,
@@ -439,7 +467,8 @@ displayGamemodes :-
     write('6. Random Bot vs Greedy Bot'), nl,
     write('7. Greedy Bot vs Human     '), nl,
     write('8. Greedy Bot vs Random Bot'), nl,
-    write('9. Greedy Bot vs Greedy Bot'), nl.
+    write('9. Greedy Bot vs Greedy Bot'), nl,
+    write('10. Greedy (Hard) Bot vs Greedy Bot'), nl.
 
 getGamemode(Option) :-
     getInput(Input),
@@ -455,6 +484,7 @@ setGamemode(6) :- asserta(playerType(0, 1)), asserta(playerType(1, 2)).
 setGamemode(7) :- asserta(playerType(0, 2)), asserta(playerType(1, 0)).
 setGamemode(8) :- asserta(playerType(0, 2)), asserta(playerType(1, 1)).
 setGamemode(9) :- asserta(playerType(0, 2)), asserta(playerType(1, 2)).
+setGamemode(10) :- asserta(playerType(0, 3)), asserta(playerType(1, 2)).
 
 readPlayerMode :-
     repeat,
