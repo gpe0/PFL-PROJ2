@@ -434,23 +434,40 @@ turn_greedy(Board, Player, Pieces) :-
 % MinMax BIG BRAIN Bot
 
 turn_greedy_minmax(Board, Player, Pieces) :-
-    nextLevelBoards([Board], Player, [], Lv1),
-    nextLevelBoards(Lv1, Player, [], Lv2),
+    nextLevelBoards([Board], Player, [], Lv1, [], _),
+    nextLevelBoards(Lv1, Player, [], Lv2, [], Lv2Parent),
     evaluateBoards(Lv2, Player, BoardsEvaluated),
     sort(BoardsEvaluated, SortedBoards),
     SortedBoards = [V-_|_],
     getBestBoards(SortedBoards, V, BestBoards),
+    findPreviousBestBoards(BestBoards, Lv2, Lv2Parent, PBestBoards),
     !,
-    random_member(MoveChosen, BestBoards),
+    random_member(MoveChosen, PBestBoards),
     setBoard(MoveChosen).
 
-nextLevelBoards([], Player, Acc, Acc).
-nextLevelBoards([CurrentBoard | Rest], Player, Acc, Res) :-
+nextLevelBoards([], Player, Acc1, Acc1, Acc2, Acc2).
+nextLevelBoards([CurrentBoard | Rest], Player, Acc1, Next, Acc2, Before) :-
     validPieces(CurrentBoard, Player, Pieces),
-    generateBoards(CurrentBoard, Player, Pieces, [], NextBoard),
+    generateBoards(CurrentBoard, Player, Pieces, [], NextBoards),
     !,
-    append(Acc, NextBoard, Temp),
-    nextLevelBoards(Rest, Player, Temp, Res).
+    length(NextBoards, N),
+    appendToListNTimes(CurrentBoard, SameLevel, N),
+    append(Acc1, NextBoards, Temp1),
+    append(Acc2, SameLevel, Temp2),
+    nextLevelBoards(Rest, Player, Temp1, Next, Temp2, Before).
+
+
+appendToListNTimes(X, L, 0).
+appendToListNTimes(X, L, N):-
+    N1 is N - 1,
+    appendToListNTimes(X, Temp, N1),
+    append(Temp, [X], L).
+
+findPreviousBestBoards([], _, _, []).
+findPreviousBestBoards([B|T], LvlC, LvlP, [PB|PBestBoards]) :-
+    findPreviousBestBoards(T, LvlC, LvlP, PBestBoards),
+    nth1(Index, LvlC, B),
+    nth1(Index, LvlP, PB).
 
 
 
