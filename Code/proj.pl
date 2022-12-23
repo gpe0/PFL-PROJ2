@@ -220,17 +220,6 @@ handleEvaluate(CandidateBoard, CandidateValue, _, ActualValue, CandidateBoard, C
 handleEvaluate(_, _, ActualBoard, ActualValue, ActualBoard, ActualValue).
     %write('not better...'), nl.
 
-getLevel2([], Player, Acc, Acc).
-getLevel2([_-B|T], Player, Acc, Res) :-
-    derivateBoards(B, Player, LB),
-    Acc1 = [LB|Acc],
-    getNextLevel(T, Player, Acc1, Res).
-
-derivateBoards(Board, Player, BoardsDerivated) :-
-    validPieces(Board, Player, Pieces),
-    generateBoards(Board, Player, Pieces, [], NewBoards),
-    evaluateBoards(NewBoards, Player, BoardsDerivated).
-
 % =========================================================================
 % FEAR MECHANIC
 % =========================================================================
