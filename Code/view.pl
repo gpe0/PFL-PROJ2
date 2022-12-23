@@ -15,6 +15,8 @@ Piece:
     5 - Mouse (Player 2)
     6 - Lion (Player 2)
     7 - Target
+    8 - Possible Move
+    9 - Previous Position
 
 Offset:
     1 - Top
@@ -64,6 +66,9 @@ drawPlace(6, 3, _) :- write(' @@@@@ |').
 
 % Possible Move
 drawPlace(8, _, _) :- write('XXXXXXX|').
+
+% Previous Position
+drawPlace(9, _, _) :- write('~~~~~~~|').
 
 % drawLineLoop(Index, Y, Offset)
 drawLineLoop(_, [], _).

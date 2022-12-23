@@ -19,6 +19,7 @@ mouse(5).
 target(7).
 empty(0).
 empty(7).
+empty(9).
 
 % playerPiece(Piece, Player)
 playerPiece(1, 0).
@@ -29,18 +30,22 @@ playerPiece(5, 1).
 playerPiece(6, 1).
 
 % targetPosition(X, Y)
-targetPostion(4, 4).
-targetPostion(4, 7).
-targetPostion(7, 4).
-targetPostion(7, 7).
+targetPosition(4, 4).
+targetPosition(4, 7).
+targetPosition(7, 4).
+targetPosition(7, 7).
 
 % =========================================================================
 % BOARD
 % =========================================================================
 
-getPiece(X, Y, Board, P) :-
+backtrackGetPiece(X, Y, Board, P) :-
     nth1(Y, Board, Row),
     nth1(X, Row, P).
+
+getPiece(X, Y, Board, P) :-
+    nth1(Y, Board, Row),
+    nth1(X, Row, P), !.
 getPiece(_, _, _, 99). % Fail prevention (AI)
  
 setPiece(X, Y, Board, P, NewBoard) :-
@@ -54,14 +59,8 @@ setPiece(X, Y, Board, P, NewBoard) :-
 % =========================================================================
 
 movePiece(X1, Y1, X2, Y2, Board, NewBoard) :-
-    targetPostion(X1, Y1),
     getPiece(X1, Y1, Board, Piece),
-    setPiece(X1, Y1, Board, 7, TempBoard), % clear the previous space
-    setPiece(X2, Y2, TempBoard, Piece, NewBoard).
-
-movePiece(X1, Y1, X2, Y2, Board, NewBoard) :-
-    getPiece(X1, Y1, Board, Piece),
-    setPiece(X1, Y1, Board, 0, TempBoard), % clear the previous space
+    setPiece(X1, Y1, Board, 9, TempBoard),
     setPiece(X2, Y2, TempBoard, Piece, NewBoard).    
 
 % getMoves(X, Y, Piece, Board, Player, Moves)
@@ -108,19 +107,19 @@ expand_acc(0, _, _, _, _, _, _, Acc, Acc).
 expand_acc(11, _, _, _, _, _, _, Acc, Acc).
 expand_acc(_, 0, _, _, _, _, _, Acc, Acc).
 expand_acc(_, 11, _, _, _, _, _, Acc, Acc).
+expand_acc(X, Y, _, _, Board, _, _, Acc, Acc) :-
+    getPiece(X, Y, Board, Piece),
+    \+empty(Piece).
 expand_acc(X, Y, StepX, StepY, Board, Player, Piece, Acc, Result) :-
     isScared(X, Y, Board, Player, Piece),
     X1 is X + StepX,
     Y1 is Y + StepY,
     expand_acc(X1, Y1, StepX, StepY, Board, Player, Piece, Acc, Result).
 expand_acc(X, Y, StepX, StepY, Board, Player, Piece, Acc, Result) :-
-    getPiece(X, Y, Board, V),
-    empty(V),
     A1 = [X-Y|Acc],
     X1 is X + StepX,
     Y1 is Y + StepY,
     expand_acc(X1, Y1, StepX, StepY, Board, Player, Piece, A1, Result).
-expand_acc(_, _, _, _, _, _, _, Acc, Acc).
     
 visualize_moves(X, Y, Piece, Board, Player, Moves) :-
     getMoves(X, Y, Piece, Board, Player, Moves),
@@ -140,7 +139,7 @@ validPieces(Board, Player, Pieces) :-
     findall(X-Y-P, validPiecesAux(X, Y, Board, Player, P), Pieces).
 
 validPiecesAux(X, Y, Board, Player, P) :-
-    getPiece(X, Y, Board, P),
+    backtrackGetPiece(X, Y, Board, P),
     playerPiece(P, Player),
     getMoves(X, Y, P, Board, Player, [_|_]).
 
@@ -337,10 +336,11 @@ getInput(Mode, X, Y) :-
     write('error: Invalid input, try again!'), nl, nl,
     getInput(Mode, X, Y).
 
-readPosition(X, Y, Piece, Board, Player) :-
+readPosition(X, Y, Piece, Board, Player, PossiblePieces) :-
     getInput(Player, X, Y),
     getPiece(X, Y, Board, Piece),
-    playerPiece(Piece, Player).
+    playerPiece(Piece, Player),
+    member(X-Y-Piece, PossiblePieces).
 
 readDestination(X, Y, Moves, Player) :-
     Mode is Player + 2,
@@ -414,8 +414,7 @@ turn_action(Board, Player, PiecesToMove) :-
 
 % Handle Human Turn
 turn_human(Board, Player, PiecesToMove) :-
-    % TODO FORCE THE PIECE TO BE IN PIECESTOMOVE
-    readPosition(X, Y, Piece, Board, Player),
+    readPosition(X, Y, Piece, Board, Player, PiecesToMove),
     visualize_moves(X, Y, Piece, Board, Player, Moves),
     readDestination(XF, YF, Moves, Player),
     movePiece(X, Y, XF, YF, Board, NewBoard),
@@ -500,6 +499,18 @@ setBoard(Board) :-
     retractall(board(_)),
     asserta(board(Board)).
 
+removeLastPosition(Board, Res) :-
+    backtrackGetPiece(X, Y, Board, 9),
+    !,
+    resetPosition(X, Y, Board, Res).
+removeLastPosition(Board, Board).
+
+resetPosition(X, Y, Board, Res) :-
+    targetPosition(X, Y),
+    setPiece(X, Y, Board, 7, Res).
+resetPosition(X, Y, Board, Res) :-
+    setPiece(X, Y, Board, 0, Res).
+
 startGame :-
     get_initial_board(InitialBoard),
     setBoard(InitialBoard),
@@ -509,7 +520,8 @@ startGame :-
     board(B),
     drawBoard(B),
     playerTurn(Player),
-    turn(B, Player),
+    removeLastPosition(B, Board),
+    turn(Board, Player),
     switchPlayer,
     gameOver(Winner),
     Winner < 3,
