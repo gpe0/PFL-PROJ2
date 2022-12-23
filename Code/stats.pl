@@ -1,5 +1,5 @@
 % =========================================================================
-% CHANGES TO MAIN LOGIC
+% CHANGE MAIN LOOP TO NOT DRAW BOARD
 % =========================================================================
 
 statsGame(Winner) :-
@@ -10,23 +10,11 @@ statsGame(Winner) :-
     repeat,
     board(B),
     playerTurn(Player),
-    statsTurn(B, Player),
+    turn(B, Player),
     switchPlayer,
     gameOver(Winner),
     Winner < 3,
     !.
-
-% Test if player has scared pieces
-% If yes, he needs to play them
-statsTurn(Board, Player) :-
-    findScaredPieces(Board, Player, ScaredPieces),
-    ScaredPieces  = [_|_],
-    turn_action(Board, Player, ScaredPieces),
-    !.
-% Otherwise, play a normal turn
-statsTurn(Board, Player) :-
-    validPieces(Board, Player, Pieces),
-    turn_action(Board, Player, Pieces).
 
 % =========================================================================
 % LOOP GAMES

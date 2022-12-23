@@ -7,7 +7,7 @@
 :- ensure_loaded('stats.pl').
 
 % =========================================================================
-% BOARD
+% BASE FACTS
 % =========================================================================
 
 elephant(1).
@@ -19,6 +19,24 @@ mouse(5).
 target(7).
 empty(0).
 empty(7).
+
+% playerPiece(Piece, Player)
+playerPiece(1, 0).
+playerPiece(2, 0).
+playerPiece(3, 0).
+playerPiece(4, 1).
+playerPiece(5, 1).
+playerPiece(6, 1).
+
+% targetPosition(X, Y)
+targetPostion(4, 4).
+targetPostion(4, 7).
+targetPostion(7, 4).
+targetPostion(7, 7).
+
+% =========================================================================
+% BOARD
+% =========================================================================
 
 getPiece(X, Y, Board, P) :-
     nth1(Y, Board, Row),
@@ -34,13 +52,9 @@ setPiece(X, Y, Board, P, NewBoard) :-
 % =========================================================================
 % MOVEMENT
 % =========================================================================
-isXorY4or7(4, 4).
-isXorY4or7(4, 7).
-isXorY4or7(7, 4).
-isXorY4or7(7, 7).
 
 movePiece(X1, Y1, X2, Y2, Board, NewBoard) :-
-    isXorY4or7(X1, Y1),
+    targetPostion(X1, Y1),
     getPiece(X1, Y1, Board, Piece),
     setPiece(X1, Y1, Board, 7, TempBoard), % clear the previous space
     setPiece(X2, Y2, TempBoard, Piece, NewBoard).
@@ -119,67 +133,6 @@ drawMoves(Board, [X-Y|T], NewBoard) :-
     drawMoves(B1,T,NewBoard).
 
 % =========================================================================
-% INPUT
-% =========================================================================
-
-main :-
-    get_initial_board(Board),
-    random(0, 2, RandomPlayer),
-    gameLoop(RandomPlayer, Board).
-
-letterToIndex(Letter, X) :-
-    Letter > 64,
-    Letter < 75,
-    X is Letter - 64.
-
-letterToIndex(Letter, X) :-
-    Letter > 96,
-    Letter < 107,
-    X is Letter - 96.
-
-writeStatus(0) :- write('[Player 1] Choose the piece to move:').
-writeStatus(1) :- write('[Player 2] Choose the piece to move:').
-writeStatus(2) :- write('[Player 1] Choose the piece destination:').
-writeStatus(3) :- write('[Player 2] Choose the piece destination:').
-
-getInput(Mode, X, Y) :-
-    writeStatus(Mode),
-    getInput([Letter|Number]),
-    readNumber(Number, YInput),
-    letterToIndex(Letter, X),
-    Y is 11 - YInput.
-getInput(Mode, X, Y) :-
-    write('error: Invalid input, try again!'), nl, nl,
-    getInput(Mode, X, Y).
-
-readPositon(X, Y, Piece, Board, Player) :-
-    getInput(Player, X, Y),
-    getPiece(X, Y, Board, Piece),
-    playerPiece(Piece, Player).
-
-readDestination(X, Y, Moves, Player) :-
-    Mode is Player + 2,
-    getInput(Mode, X, Y),
-    member(X-Y, Moves).
-
-% TO DELETE
-gameLoop(_, Board) :-
-    gameOver(Board, Winner),
-    Winner < 3,
-    !,
-    format('WINNER IS PLAYER~d', [Winner]).
-
-% TO DELETE
-gameLoop(Player, Board) :-
-    drawBoard(Board),
-    readPositon(X, Y, Piece, Board, Player),
-    visualize_moves(X, Y, Piece, Board, Player, Moves),
-    readDestination(XF, YF, Moves, Player),
-    movePiece(X, Y, XF, YF, Board, NewBoard),
-    OtherPlayer is 1 - Player,
-    gameLoop(OtherPlayer, NewBoard).
-
-% =========================================================================
 % AI RANDOM BOT
 % =========================================================================
 
@@ -238,6 +191,47 @@ getBestBoards([V-B|RestBoards], V, [B|T]) :-
 getBestBoards(_, _, []).
 
 % =========================================================================
+% MINIMAX BIG BRAIN BOT
+% =========================================================================
+
+generateLevel2([], _, []).
+generateLevel2([Board|RestBoards], Player, [Board-Lv2Part|RT]) :-
+    %write('generating boards...'), nl,
+    validPieces(Board, Player, Pieces),
+    generateBoards(Board, Player, Pieces, [], Lv2Part),
+    generateLevel2(RestBoards, Player, RT).
+
+evaluateLevel2([], _, B, _, B).
+evaluateLevel2([Previous-Boards|RestBoards], Player, BestBoard, BestValue, Res) :-
+    %length(RestBoards, N),
+    %nl, write(N), nl,
+    evaluateBoards(Boards, Player, BoardsEvaluated),
+    sort(BoardsEvaluated, SortedBoards),
+    nth1(1, SortedBoards, V-_),
+    getBestBoards(SortedBoards, V, BestBoards),
+    random_member(MoveChosen, BestBoards),
+    !,
+    handleEvaluate(Previous, V, BestBoard, BestValue, A, B),
+    evaluateLevel2(RestBoards, Player, A, B, Res).
+
+handleEvaluate(CandidateBoard, CandidateValue, _, ActualValue, CandidateBoard, CandidateValue) :-
+    CandidateValue < ActualValue.
+    %write('found better...'), nl.
+handleEvaluate(_, _, ActualBoard, ActualValue, ActualBoard, ActualValue).
+    %write('not better...'), nl.
+
+getLevel2([], Player, Acc, Acc).
+getLevel2([_-B|T], Player, Acc, Res) :-
+    derivateBoards(B, Player, LB),
+    Acc1 = [LB|Acc],
+    getNextLevel(T, Player, Acc1, Res).
+
+derivateBoards(Board, Player, BoardsDerivated) :-
+    validPieces(Board, Player, Pieces),
+    generateBoards(Board, Player, Pieces, [], NewBoards),
+    evaluateBoards(NewBoards, Player, BoardsDerivated).
+
+% =========================================================================
 % FEAR MECHANIC
 % =========================================================================
 
@@ -271,14 +265,6 @@ isScared(X, Y, Board, Player, P) :-
 % =========================================================================
 % GAME OVER
 % =========================================================================
-
-% playerPiece(Piece, Player)
-playerPiece(1, 0).
-playerPiece(2, 0).
-playerPiece(3, 0).
-playerPiece(4, 1).
-playerPiece(5, 1).
-playerPiece(6, 1).
 
 boolToInt(Pred, 1) :- call(Pred).
 boolToInt(_, 0).
@@ -321,10 +307,10 @@ gameOverWinner(_,3).
 % INPUT
 % =========================================================================
 
-getInput([]) :- peek_code(10), get_code(10), !.
-getInput([H|T]) :-
+getBuffer([]) :- peek_code(10), get_code(10), !.
+getBuffer([H|T]) :-
     get_code(H),
-    getInput(T).
+    getBuffer(T).
 
 readNumber(L, Res) :- readNumberAux(L, 0, Res).
 
@@ -336,6 +322,41 @@ readNumberAux([C|T], Acc, Res):-
     Acc1 is 10*Acc + (C - 48),
     readNumberAux(T, Acc1, Res).
 readNumberAux(_, Acc, Acc).
+
+letterToIndex(Letter, X) :-
+    Letter > 64,
+    Letter < 75,
+    X is Letter - 64.
+
+letterToIndex(Letter, X) :-
+    Letter > 96,
+    Letter < 107,
+    X is Letter - 96.
+
+writeStatus(0) :- write('[Player 1] Choose the piece to move:').
+writeStatus(1) :- write('[Player 2] Choose the piece to move:').
+writeStatus(2) :- write('[Player 1] Choose the piece destination:').
+writeStatus(3) :- write('[Player 2] Choose the piece destination:').
+
+getInput(Mode, X, Y) :-
+    writeStatus(Mode),
+    getBuffer([Letter|Number]),
+    readNumber(Number, YInput),
+    letterToIndex(Letter, X),
+    Y is 11 - YInput.
+getInput(Mode, X, Y) :-
+    write('error: Invalid input, try again!'), nl, nl,
+    getInput(Mode, X, Y).
+
+readPosition(X, Y, Piece, Board, Player) :-
+    getInput(Player, X, Y),
+    getPiece(X, Y, Board, Piece),
+    playerPiece(Piece, Player).
+
+readDestination(X, Y, Moves, Player) :-
+    Mode is Player + 2,
+    getInput(Mode, X, Y),
+    member(X-Y, Moves).
 
 parseOption(L, Option) :-
     readNumber(L, Option),
@@ -404,7 +425,7 @@ turn_action(Board, Player, PiecesToMove) :-
 % Handle Human Turn
 turn_human(Board, Player, PiecesToMove) :-
     % TODO FORCE THE PIECE TO BE IN PIECESTOMOVE
-    readPositon(X, Y, Piece, Board, Player),
+    readPosition(X, Y, Piece, Board, Player),
     visualize_moves(X, Y, Piece, Board, Player, Moves),
     readDestination(XF, YF, Moves, Player),
     movePiece(X, Y, XF, YF, Board, NewBoard),
@@ -431,45 +452,17 @@ turn_greedy(Board, Player, Pieces) :-
     random_member(MoveChosen, BestBoards),
     setBoard(MoveChosen).
 
-% MinMax BIG BRAIN Bot
-
+% Handle MinMax Turn
 turn_greedy_minmax(Board, Player, Pieces) :-
-    nextLevelBoards([Board], Player, [], Lv1, [], _),
-    nextLevelBoards(Lv1, Player, [], Lv2, [], Lv2Parent),
-    evaluateBoards(Lv2, Player, BoardsEvaluated),
-    sort(BoardsEvaluated, SortedBoards),
-    SortedBoards = [V-_|_],
-    getBestBoards(SortedBoards, V, BestBoards),
-    findPreviousBestBoards(BestBoards, Lv2, Lv2Parent, PBestBoards),
+    %write('generating level 1...'), nl,
+    generateBoards(Board, Player, Pieces, [], Lv1),
+    %write('generating level 2...'), nl,
+    generateLevel2(Lv1, Player, Lv2),
+    %write('evaluating level 2...'), nl,
+    evaluateLevel2(Lv2, Player, BestBoard, 99, Res),
+    %write('done...'), nl,
     !,
-    random_member(MoveChosen, PBestBoards),
-    setBoard(MoveChosen).
-
-nextLevelBoards([], Player, Acc1, Acc1, Acc2, Acc2).
-nextLevelBoards([CurrentBoard | Rest], Player, Acc1, Next, Acc2, Before) :-
-    validPieces(CurrentBoard, Player, Pieces),
-    generateBoards(CurrentBoard, Player, Pieces, [], NextBoards),
-    !,
-    length(NextBoards, N),
-    appendToListNTimes(CurrentBoard, SameLevel, N),
-    append(Acc1, NextBoards, Temp1),
-    append(Acc2, SameLevel, Temp2),
-    nextLevelBoards(Rest, Player, Temp1, Next, Temp2, Before).
-
-
-appendToListNTimes(X, L, 0).
-appendToListNTimes(X, L, N):-
-    N1 is N - 1,
-    appendToListNTimes(X, Temp, N1),
-    append(Temp, [X], L).
-
-findPreviousBestBoards([], _, _, []).
-findPreviousBestBoards([B|T], LvlC, LvlP, [PB|PBestBoards]) :-
-    findPreviousBestBoards(T, LvlC, LvlP, PBestBoards),
-    nth1(Index, LvlC, B),
-    nth1(Index, LvlP, PB).
-
-
+    setBoard(Res).
 
 displayInitalMessage :-
     write('===== Barca Board Game ====='), nl,
@@ -490,7 +483,7 @@ displayGamemodes :-
     write('10. Greedy (Hard) Bot vs Greedy Bot'), nl.
 
 getGamemode(Option) :-
-    getInput(Input),
+    getBuffer(Input),
     parseOption(Input, Option),
     retractall(playerType(_,_)).
 
