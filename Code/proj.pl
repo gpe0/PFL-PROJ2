@@ -347,11 +347,11 @@ readDestination(X, Y, Moves, Player) :-
     getInput(Mode, X, Y),
     member(X-Y, Moves).
 
-parseOption(L, Option) :-
-    readNumber(L, Option),
-    Option > 0,
-    Option < 11.
-parseOption(_, _) :-
+parsePlayerType(Input, Option) :-
+    readNumber(Input, Option),
+    Option > -1,
+    Option < 4.
+parsePlayerType(_, _) :-
     write('error: Invalid input, try again!'), nl,
     fail.
 
@@ -368,6 +368,7 @@ parseOption(_, _) :-
  * - 0 => Human
  * - 1 => Random Bot
  * - 2 => Greedy Bot
+ * - 3 => MinMax Bot
  */
 
 displayWinnerMessage(Winner) :-
@@ -458,44 +459,29 @@ displayInitalMessage :-
     write('          PFL 22/23         '), nl,
     write('============================'), nl, nl.
 
-displayGamemodes :-
-    write('         GAME MODES         '), nl,
-    write('1. Human      vs Human     '), nl,
-    write('2. Human      vs Random Bot'), nl,
-    write('3. Human      vs Greedy Bot'), nl,
-    write('4. Random Bot vs Human     '), nl,
-    write('5. Random Bot vs Random Bot'), nl,
-    write('6. Random Bot vs Greedy Bot'), nl,
-    write('7. Greedy Bot vs Human     '), nl,
-    write('8. Greedy Bot vs Random Bot'), nl,
-    write('9. Greedy Bot vs Greedy Bot'), nl,
-    write('10. Greedy (Hard) Bot vs Greedy Bot'), nl.
+displayPlayerTypes(Player) :-
+    Aux is Player + 1,
+    format('       PLAYER ~d TYPE        ', [Aux]), nl,
+    write('0. Human'), nl,
+    write('1. Random'), nl,
+    write('2. Greedy'), nl,
+    write('3. MinMax'), nl.
 
-getGamemode(Option) :-
+getPlayerType(Player) :-
     getBuffer(Input),
-    parseOption(Input, Option),
-    retractall(playerType(_,_)).
+    parsePlayerType(Input, Option),
+    retractall(playerType(Player, _)),
+    asserta(playerType(Player, Option)).
 
-setGamemode(1) :- asserta(playerType(0, 0)), asserta(playerType(1, 0)).
-setGamemode(2) :- asserta(playerType(0, 0)), asserta(playerType(1, 1)).
-setGamemode(3) :- asserta(playerType(0, 0)), asserta(playerType(1, 2)).
-setGamemode(4) :- asserta(playerType(0, 1)), asserta(playerType(1, 0)).
-setGamemode(5) :- asserta(playerType(0, 1)), asserta(playerType(1, 1)).
-setGamemode(6) :- asserta(playerType(0, 1)), asserta(playerType(1, 2)).
-setGamemode(7) :- asserta(playerType(0, 2)), asserta(playerType(1, 0)).
-setGamemode(8) :- asserta(playerType(0, 2)), asserta(playerType(1, 1)).
-setGamemode(9) :- asserta(playerType(0, 2)), asserta(playerType(1, 2)).
-setGamemode(10) :- asserta(playerType(0, 3)), asserta(playerType(1, 2)).
-
-readPlayerMode :-
+readPlayerType(Player) :-
     repeat,
-    displayGamemodes,
-    getGamemode(Option),
-    setGamemode(Option).
+    displayPlayerTypes(Player),
+    getPlayerType(Player).
 
 menu :-
     displayInitalMessage,
-    readPlayerMode.
+    readPlayerType(0),
+    readPlayerType(1).
 
 switchPlayer :-
     playerTurn(0),
