@@ -7,8 +7,8 @@
 ### Grupo: (Barca_2)
 
 - 202005358 - Alexandre Ferreira Nunes
-- 2020xxxxx - Gonçalo da Costa Sequeira Pinto
-- 2020xxxxx - Guilherme António Cerqueira Magalhães
+- 202004907 - Gonçalo da Costa Sequeira Pinto
+- 202005285 - Guilherme António Cerqueira Magalhães
 
 ## Instalação e Execução
 
