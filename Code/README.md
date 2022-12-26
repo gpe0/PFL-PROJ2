@@ -32,8 +32,8 @@ Indica o tipo do jogador.
 
 Os jogadores são representados por:
 
-1. Player 1
-2. Player 2
+0. Player 1
+1. Player 2
 
 Os tipos podem ser:
 
