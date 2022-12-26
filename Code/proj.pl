@@ -5,6 +5,7 @@
 :- ensure_loaded('view.pl').
 :- ensure_loaded('tests.pl').
 :- ensure_loaded('stats.pl').
+:- ensure_loaded('AI.pl').
 
 % =========================================================================
 % BASE FACTS
@@ -526,120 +527,6 @@ startGame :-
     gameOver(Winner),
     Winner < 3,
     displayWinnerMessage(Winner).
-
-
-% evaluatePiecePosition(+Piece, +X, +Y, -Points)
-
-% Targets
-evaluatePiece(_, X, Y, 100) :- targetPosition(X, Y).
-
-% Elephants
-
-% Red
-evaluatePiece(Piece, _, 4, 8) :- elephant(Piece).
-evaluatePiece(Piece, _, 7, 8) :- elephant(Piece).
-evaluatePiece(Piece, 4, _, 8) :- elephant(Piece).
-evaluatePiece(Piece, 7, _, 8) :- elephant(Piece).
-evaluatePiece(Piece, X, X, 8) :- elephant(Piece).
-evaluatePiece(Piece, X, Y, 8) :- Y = 11 - X, elephant(Piece).
-
-% Yellow
-evaluatePiece(Piece, 2, 5, 6) :- elephant(Piece).
-evaluatePiece(Piece, 2, 6, 6) :- elephant(Piece).
-evaluatePiece(Piece, 3, 5, 6) :- elephant(Piece).
-evaluatePiece(Piece, 3, 6, 6) :- elephant(Piece).
-
-evaluatePiece(Piece, 8, 5, 6) :- elephant(Piece).
-evaluatePiece(Piece, 8, 6, 6) :- elephant(Piece).
-evaluatePiece(Piece, 9, 5, 6) :- elephant(Piece).
-evaluatePiece(Piece, 9, 6, 6) :- elephant(Piece).
-
-evaluatePiece(Piece, 5, 2, 6) :- elephant(Piece).
-evaluatePiece(Piece, 5, 3, 6) :- elephant(Piece).
-evaluatePiece(Piece, 6, 2, 6) :- elephant(Piece).
-evaluatePiece(Piece, 6, 3, 6) :- elephant(Piece).
-
-evaluatePiece(Piece, 5, 8, 6) :- elephant(Piece).
-evaluatePiece(Piece, 5, 9, 6) :- elephant(Piece).
-evaluatePiece(Piece, 6, 8, 6) :- elephant(Piece).
-evaluatePiece(Piece, 6, 9, 6) :- elephant(Piece).
-
-% Green
-evaluatePiece(Piece, 1, 5, 4) :- elephant(Piece).
-evaluatePiece(Piece, 1, 6, 4) :- elephant(Piece).
-
-evaluatePiece(Piece, 2, 3, 4) :- elephant(Piece).
-evaluatePiece(Piece, 3, 2, 4) :- elephant(Piece).
-
-evaluatePiece(Piece, 5, 1, 4) :- elephant(Piece).
-evaluatePiece(Piece, 6, 1, 4) :- elephant(Piece).
-
-evaluatePiece(Piece, 8, 2, 4) :- elephant(Piece).
-evaluatePiece(Piece, 9, 3, 4) :- elephant(Piece).
-
-evaluatePiece(Piece, 10, 5, 4) :- elephant(Piece).
-evaluatePiece(Piece, 10, 6, 4) :- elephant(Piece).
-
-evaluatePiece(Piece, 9, 8, 4) :- elephant(Piece).
-evaluatePiece(Piece, 8, 9, 4) :- elephant(Piece).
-
-evaluatePiece(Piece, 5, 10, 4) :- elephant(Piece).
-evaluatePiece(Piece, 6, 10, 4) :- elephant(Piece).
-
-evaluatePiece(Piece, 3, 9, 4) :- elephant(Piece).
-evaluatePiece(Piece, 2, 8, 4) :- elephant(Piece).
-
-% Blue
-
-evaluatePiece(Piece, X, Y, 2) :- 
-    elephant(Piece),
-    X > 0, X < 11,
-    Y > 0, Y < 11.
-
-% Mice
-
-% Red
-evaluatePiece(Piece, _, 4, 7) :- mouse(Piece).
-evaluatePiece(Piece, _, 7, 7) :- mouse(Piece).
-evaluatePiece(Piece, 4, _, 7) :- mouse(Piece).
-evaluatePiece(Piece, 7, _, 7) :- mouse(Piece).
-
-% Yellow
-evaluatePiece(Piece, X, Y, 5) :- 
-    mouse(Piece),
-    X > 4, X < 7,
-    Y > 4, Y < 7.
-
-
-% Green
-
-evaluatePiece(Piece, X, Y, 3) :- 
-    mouse(Piece),
-    X > 4, X < 7,
-    Y > 0, Y < 4.
-
-evaluatePiece(Piece, X, Y, 3) :- 
-        mouse(Piece),
-        X > 4, X < 7,
-        Y > 7, Y < 11.
-
-evaluatePiece(Piece, X, Y, 3) :- 
-        mouse(Piece),
-        X > 0, X < 4,
-        Y > 4, Y < 7.
-
-evaluatePiece(Piece, X, Y, 3) :- 
-        mouse(Piece),
-        X > 7, X < 11,
-        Y > 4, Y < 7.
-
-% Blue
-
-evaluatePiece(Piece, X, Y, 1) :- 
-    mouse(Piece),
-    X > 0, X < 11,
-    Y > 0, Y < 11.
-
 
 play :-
     menu,
