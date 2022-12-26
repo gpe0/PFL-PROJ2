@@ -506,7 +506,8 @@ removeLastPosition(Board, Board).
 
 resetPosition(X, Y, Board, Res) :-
     targetPosition(X, Y),
-    setPiece(X, Y, Board, 7, Res).
+    setPiece(X, Y, Board, 7, Res),
+    !.
 resetPosition(X, Y, Board, Res) :-
     setPiece(X, Y, Board, 0, Res).
 
