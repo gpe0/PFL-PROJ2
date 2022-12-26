@@ -208,8 +208,6 @@ evaluateLevel2([Previous-Boards|RestBoards], Player, BestBoard, BestValue, Res) 
     evaluateBoards(Boards, Player, BoardsEvaluated),
     sort(BoardsEvaluated, SortedBoards),
     nth1(1, SortedBoards, V-_),
-    getBestBoards(SortedBoards, V, BestBoards),
-    random_member(MoveChosen, BestBoards),
     !,
     handleEvaluate(Previous, V, BestBoard, BestValue, A, B),
     evaluateLevel2(RestBoards, Player, A, B, Res).
@@ -449,7 +447,7 @@ turn_greedy_minmax(Board, Player, Pieces) :-
     %write('generating level 2...'), nl,
     generateLevel2(Lv1, Player, Lv2),
     %write('evaluating level 2...'), nl,
-    evaluateLevel2(Lv2, Player, BestBoard, 99, Res),
+    evaluateLevel2(Lv2, Player, _BestBoard, 99, Res),
     %write('done...'), nl,
     !,
     setBoard(Res).
