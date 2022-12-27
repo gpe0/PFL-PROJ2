@@ -157,17 +157,17 @@ getRandomMove(Board, Player, X-Y-Piece, XF-YF) :-
 % AI BIG BRAIN BOT
 % =========================================================================
 
+generateBoards(_, _, [], Acc, Acc).
 generateBoards(Board, Player, [X-Y-Piece|RestPieces], Acc, Boards) :-
     getMoves(X, Y, Piece, Board, Player, ValidMoves),
     generateBoardsAux(Board, X-Y-Piece, ValidMoves, [], NewBoards),
     append(Acc, NewBoards, Aux),
     generateBoards(Board, Player, RestPieces, Aux, Boards).
-generateBoards(_, _, _, Acc, Acc).
 
+generateBoardsAux(_, _, [], Acc, Acc).
 generateBoardsAux(Board, X-Y-Piece, [XF-YF|RestMoves], Acc, Boards) :-
     movePiece(X, Y, XF, YF, Board, NewBoard),
     generateBoardsAux(Board, X-Y-Piece, RestMoves, [NewBoard | Acc], Boards).
-generateBoardsAux(_,_,_,Acc,Acc).
 
 evaluate(Board, Player, Value) :-
     % Evaluate objectives
