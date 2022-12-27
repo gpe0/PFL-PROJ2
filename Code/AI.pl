@@ -1,353 +1,180 @@
-% evaluatePiece(+Piece, +X, +Y, -Points)
+/*
+    Calculate the quadrant of a position
+*/
+firstQuadrant(X, Y) :- Y < 6, X > 5.
+secondQuadrant(X, Y) :- Y < 6, X < 6.
+thirdQuadrant(X, Y) :- Y > 5, X < 6.
+fourthQuadrant(X, Y) :- Y > 5, X > 5.
 
-% Targets
-evaluatePiece(Piece, X, Y, _, 100) :- mouse(Piece), targetPosition(X, Y).
-evaluatePiece(Piece, X, Y, _, 100) :- lion(Piece), targetPosition(X, Y).
-evaluatePiece(Piece, X, Y, _, 100) :- elephant(Piece), targetPosition(X, Y).
-
-evaluatePiece(Piece, X, Y, Goals, Value) :-
-    mouse(Piece),
-    evaluateMouse(X, Y, Goals, Value).
-evaluatePiece(Piece, X, Y, Goals, Value) :-
-    lion(Piece),
-    evaluateLion(X, Y, Goals, Value).
-evaluatePiece(Piece, X, Y, Goals, Value) :-
-    elephant(Piece),
-    evaluateElephant(X, Y, Goals, Value).
-
-evaluatePiece(_, _, _, _, 0).
-
-% Elephants
-
-evaluateElephant(X, Y, [7, _, _, _], 7) :-
-    X > 2, X < 6,
-    Y > 2, Y < 6.
-
-evaluateElephant(X, Y, [_, _, _, _], 4) :-
-    X > 2, X < 6,
-    Y > 2, Y < 6.
-
-evaluateElephant(X, Y, [_, 7, _, _], 7) :-
-    X > 5, X < 9,
-    Y > 2, Y < 6.
-
-evaluateElephant(X, Y, [_, _, _, _], 4) :-
-    X > 5, X < 9,
-    Y > 2, Y < 6.
-
-evaluateElephant(X, Y, [_, _, 7, _], 7) :-
-    X > 2, X < 6,
-    Y > 5, Y < 9.
-
-evaluateElephant(X, Y, [_, _, _, _], 4) :-
-    X > 2, X < 6,
-    Y > 5, Y < 9.
-
-evaluateElephant(X, Y, [_, _, _, 7], 7) :-
-    X > 5, X < 9,
-    Y > 5, Y < 9.
-
-evaluateElephant(X, Y, [_, _, _, _], 4) :-
-    X > 5, X < 9,
-    Y > 5, Y < 9.
-
-evaluateElephant(_, _, _, 1).
-
-% Mice
-
-evaluateMouse(4, Y, [7, _, _, _], 7) :-
-    Y > 2, Y < 6.
-
-evaluateMouse(X, 4, [7, _, _, _], 7) :-
-    X > 2, X < 6.
-
-evaluateMouse(4, Y, [_, _, _, _], 4) :-
-    Y > 2, Y < 6.
-
-evaluateMouse(X, 4, [_, _, _, _], 4) :-
-    X > 2, X < 6.
-
-evaluateMouse(7, Y, [_, 7, _, _], 7) :-
-    Y > 2, Y < 6.
-
-evaluateMouse(X, 4, [_, 7, _, _], 7) :- 
-    X > 5, X < 9.
-
-evaluateMouse(7, Y, [_, _, _, _], 4) :-
-    Y > 2, Y < 6.
-
-evaluateMouse(X, 4, [_, _, _, _], 4) :- 
-    X > 5, X < 9.
-
-evaluateMouse(4, Y, [_, _, 7, _], 7) :-
-    Y > 5, Y < 9.
-
-evaluateMouse(X, 7, [_, _, 7, _], 7) :-
-    X > 2, X < 6.
-
-evaluateMouse(4, Y, [_, _, _, _], 4) :-
-    Y > 5, Y < 9.
-
-evaluateMouse(X, 7, [_, _, _, _], 4) :-
-    X > 2, X < 6.
-
-evaluateMouse(7, Y, [_, _, _, 7], 7) :-
-    Y > 5, Y < 9.
-
-evaluateMouse(X, 7, [_, _, _, 7], 7) :-
-    X > 5, X < 9.
-
-evaluateMouse(7, Y, [_, _, _, _], 4) :-
-    Y > 5, Y < 9.
-
-evaluateMouse(X, 7, [_, _, _, _], 4) :-
-    X > 5, X < 9.
-
-
-evaluateMouse(_, _, _, 1).
-
-% Lions (NOT FINISHED)
-
-evaluateLion(X, Y, [7, _, _, _], 7) :-
-    Y = X + 4,
-    X > 2, X < 6,
-    Y > 2, Y < 6.
-
-evaluateLion(X, Y, [7, _, _, _], 7) :-
-    Y = 11 - X,
-    X > 2, X < 6,
-    Y > 2, Y < 6.
-
-evaluateLion(X, Y, [_, _, _, _], 4) :-
-    Y = X + 4,
-    X > 2, X < 6,
-    Y > 2, Y < 6.
-
-evaluateLion(X, Y, [_, _, _, _], 4) :-
-    Y = 11 - X,
-    X > 2, X < 6,
-    Y > 2, Y < 6.
-
-
-evaluateLion(X, X, [_, 7, _, _], 7) :-
-    X > 5, X < 9.
-
-evaluateLion(X, Y, [_, 7, _, _], 7) :-
-    Y = 14 - X,
-    X > 2, X < 6,
-    Y > 2, Y < 6.
-
-evaluateLion(X, X, [_, _, _, _], 4) :-
-    X > 5, X < 9.
-
-evaluateLion(X, Y, [_, _, _, _], 4) :-
-    Y = 14 - X,
-    X > 2, X < 6,
-    Y > 2, Y < 6.
-
-evaluateLion(X, X, [_, _, 7, _], 7) :-
-    X > 2, X < 6.
-    
-evaluateLion(X, Y, [_, _, 7, _], 7) :-
-    Y = 8 - X,
-    X > 2, X < 6,
-    Y > 5, Y < 9.
-
-evaluateLion(X, X, [_, _, _, _], 4) :-
-    X > 2, X < 6.
-    
-evaluateLion(X, Y, [_, _, _, _], 4) :-
-    Y = 8 - X,
-    X > 2, X < 6,
-    Y > 5, Y < 9.
-
-evaluateLion(X, Y, [_, _, _, 7], 7) :-
-    Y = 11 - X,
-    X > 5, X < 9,
-    Y > 5, Y < 9.
-
-evaluateLion(X, Y, [_, _, _, 7], 7) :-
-    Y = X - 3,
-    X > 5, X < 9,
-    Y > 5, Y < 9.
-
-evaluateLion(X, Y, [_, _, _, _], 4) :-
-    Y = 11 - X,
-    X > 5, X < 9,
-    Y > 5, Y < 9.
-
-evaluateLion(X, Y, [_, _, _, _], 4) :-
-    Y = X - 3,
-    X > 5, X < 9,
-    Y > 5, Y < 9.
-
-evaluateLion(_, _, _, 1).
-
+% evaluatePiece(+Piece, +X, +Y, +Goals, -Points)
 
 /*
-% Red
-evaluateElephant(_, 4, 8).
-evaluateElephant(_, 7, 8).
-evaluateElephant(4, _, 8).
-evaluateElephant(7, _, 8).
-evaluateElephant(X, X, 8).
-
-
-% Yellow
-evaluateElephant(2, 5, 6).
-evaluateElephant(2, 6, 6).
-evaluateElephant(3, 5, 6).
-evaluateElephant(3, 6, 6).
-
-evaluateElephant(8, 5, 6).
-evaluateElephant(8, 6, 6).
-evaluateElephant(9, 5, 6).
-evaluateElephant(9, 6, 6).
-
-evaluateElephant(5, 2, 6).
-evaluateElephant(5, 3, 6).
-evaluateElephant(6, 2, 6).
-evaluateElephant(6, 3, 6).
-
-evaluateElephant(5, 8, 6).
-evaluateElephant(5, 9, 6).
-evaluateElephant(6, 8, 6).
-evaluateElephant(6, 9, 6).
-
-% Green
-evaluateElephant(1, 5, 4).
-evaluateElephant(1, 6, 4).
-
-evaluateElephant(2, 3, 4).
-evaluateElephant(3, 2, 4).
-
-evaluateElephant(5, 1, 4).
-evaluateElephant(6, 1, 4).
-
-evaluateElephant(8, 2, 4).
-evaluateElephant(9, 3, 4).
-
-evaluateElephant(10, 5, 4).
-evaluateElephant(10, 6, 4).
-
-evaluateElephant(9, 8, 4).
-evaluateElephant(8, 9, 4).
-
-evaluateElephant(5, 10, 4).
-evaluateElephant(6, 10, 4).
-
-evaluateElephant(3, 9, 4).
-evaluateElephant(2, 8, 4).
-
-% Blue
-
-evaluateElephant(_, _, 2).
-
-% Mouse
-
-% Red
-evaluateMouse(_, 4, 7).
-evaluateMouse(_, 7, 7).
-evaluateMouse(4, _, 7).
-evaluateMouse(7, _, 7).
-
-% Yellow
-evaluateMouse(X, Y, 5) :- 
-    X > 4, X < 7,
-    Y > 4, Y < 7.
-
-% Green
-
-evaluateMouse(X, Y, 3) :- 
-    X > 4, X < 7,
-    Y > 0, Y < 4.
-
-evaluateMouse(X, Y, 3) :- 
-    X > 4, X < 7,
-    Y > 7, Y < 11.
-
-evaluateMouse(X, Y, 3) :- 
-    X > 0, X < 4,
-    Y > 4, Y < 7.
-
-evaluateMouse(X, Y, 3) :- 
-    X > 7, X < 11,
-    Y > 4, Y < 7.
-
-% Blue
-
-evaluateMouse(_, _, 1).
-
-% Lion
-
-% Red
-
-evaluateLion(X, X, 7).
-evaluateLion(X, Y, 7) :- Y = 11 - X.
-evaluateLion(X, Y, 7) :- Y = X - 3.
-evaluateLion(X, Y, 7) :- Y = 8 - X.
-evaluateLion(X, Y, 7) :- Y = X + 3.
-evaluateLion(X, Y, 7) :- Y = 14 - X.
-
-% Yellow
-
-evaluateLion(4, 5, 5).
-evaluateLion(4, 6, 5).
-evaluateLion(5, 4, 5).
-evaluateLion(6, 4, 5).
-evaluateLion(7, 5, 5).
-evaluateLion(7, 6, 5).
-evaluateLion(5, 7, 5).
-evaluateLion(6, 7, 5).
-
-% Green
-
-evaluateLion(3, 2, 3).
-evaluateLion(4, 2, 3). 
-evaluateLion(4, 3, 3). 
-evaluateLion(2, 3, 3). 
-evaluateLion(2, 4, 3). 
-evaluateLion(3, 4, 3). 
-evaluateLion(7, 2, 3). 
-evaluateLion(7, 3, 3). 
-evaluateLion(8, 2, 3). 
-evaluateLion(9, 3, 3). 
-evaluateLion(9, 4, 3). 
-evaluateLion(8, 4, 3). 
-evaluateLion(2, 7, 3). 
-evaluateLion(3, 7, 3). 
-evaluateLion(2, 8, 3). 
-evaluateLion(3, 9, 3). 
-evaluateLion(4, 9, 3). 
-evaluateLion(4, 8, 3). 
-evaluateLion(8, 7, 3). 
-evaluateLion(9, 7, 3). 
-evaluateLion(9, 8, 3). 
-evaluateLion(7, 8, 3). 
-evaluateLion(7, 9, 3). 
-evaluateLion(8, 9, 3). 
-
-% Blue
-evaluateLion(_, _, 1).
-
+    If the position is a target the value is determined.
 */
+evaluatePiece(Piece, X, Y, _, 10000) :- mouse(Piece), targetPosition(X, Y).
+evaluatePiece(Piece, X, Y, _, 10000) :- lion(Piece), targetPosition(X, Y).
+evaluatePiece(Piece, X, Y, _, 10000) :- elephant(Piece), targetPosition(X, Y).
 
+/*
+    Depending on the quadrant, evaluate the value on the corresponding target
+*/
+evaluatePiece(Piece, X, Y, [_, Target, _, _], Value) :-
+    firstQuadrant(X, Y),
+    evaluatePieceAux(Piece, X, Y, Target, Value).
+evaluatePiece(Piece, X, Y, [Target, _, _, _], Value) :-
+    secondQuadrant(X, Y),
+    evaluatePieceAux(Piece, X, Y, Target, Value).
+evaluatePiece(Piece, X, Y, [_, _, Target, _], Value) :-
+    thirdQuadrant(X, Y),
+    evaluatePieceAux(Piece, X, Y, Target, Value).
+evaluatePiece(Piece, X, Y, [_, _, _, Target], Value) :-
+    fourthQuadrant(X, Y),
+    evaluatePieceAux(Piece, X, Y, Target, Value).
 
-getGoalsPieces(Board, [G1, G2, G3, G4]) :-
-    getPiece(4, 4, Board, G1),
-    getPiece(4, 7, Board, G2),
-    getPiece(7, 4, Board, G3),
-    getPiece(7, 7, Board, G4).
+/*
+    If the target of the quadrant is empty,
+    all the positions on the quadrant value double.
+*/  
+evaluatePieceAux(Piece, X, Y, Target, Value) :-
+    empty(Target),
+    getPieceValue(Piece, X, Y, 2, Value).
+evaluatePieceAux(Piece, X, Y, _, Value) :-
+    getPieceValue(Piece, X, Y, 1, Value).
 
+/*
+    Redirects the piece value calculation depending
+    on the type, also receives the modifier calculated
+    by evaluatePieceAux
+*/
+getPieceValue(Piece, X, Y, Modifier, Value) :-
+    mouse(Piece),
+    evaluateMouse(X, Y, Modifier, Value).
+getPieceValue(Piece, X, Y, Modifier, Value) :-
+    lion(Piece),
+    evaluateLion(X, Y, Modifier, Value).
+getPieceValue(Piece, X, Y, Modifier, Value) :-
+    elephant(Piece),
+    evaluateElephant(X, Y, Modifier, Value).
+getPieceValue(_, _, _, _, 0).
+
+% =========================================================================
+% Evaluate the position of a ELEPHANT
+% =========================================================================
+
+% evaluateElephant(X, Y, Modifier, Value)
+
+/*
+    RED ZONE
+    - CENTER OF THE BOARD
+*/
+evaluateElephant(X, Y, Modifier, Value) :-
+    X > 2, X < 9,
+    Y > 2, Y < 9,
+    Value is Modifier * 20.
+
+/*
+    ORANGE ZONE
+    - CAN MOVE TO TARGET
+*/
+evaluateElephant(_, 4, Modifier, Value) :- Value is Modifier * 15.
+evaluateElephant(_, 7, Modifier, Value) :- Value is Modifier * 15.
+evaluateElephant(X, X, Modifier, Value) :- Value is Modifier * 15.
+evaluateElephant(X, Y, Modifier, Value) :- Y = 11 - X, Value is Modifier * 15.
+
+/*
+    YELLOW ZONE
+    - CAN MOVE TO CENTER
+*/
+evaluateElephant(4, _, Modifier, Value) :- Value is Modifier * 10.
+evaluateElephant(7, _, Modifier, Value) :- Value is Modifier * 10.
+evaluateElephant(5, _, Modifier, Value) :- Value is Modifier * 10.
+evaluateElephant(6, _, Modifier, Value) :- Value is Modifier * 10.
+evaluateElephant(_, 5, Modifier, Value) :- Value is Modifier * 10.
+evaluateElephant(_, 6, Modifier, Value) :- Value is Modifier * 10.
+
+/* 
+    GREEN ZONE
+    - REST OF POSITIONS (BAD ONES)
+*/
+evaluateElephant(_, _, Modifier, Value) :- Value is Modifier * 5.
+
+% =========================================================================
+% Evaluate the position of a MOUSE
+% =========================================================================
+
+/*
+    RED ZONE
+    - CAN MOVE TO TARGET
+*/
+evaluateMouse(4, _, Modifier, Value) :- Value is Modifier * 20.
+evaluateMouse(7, _, Modifier, Value) :- Value is Modifier * 20.
+evaluateMouse(_, 4, Modifier, Value) :- Value is Modifier * 20.
+evaluateMouse(_, 7, Modifier, Value) :- Value is Modifier * 20.
+
+/*
+    ORANGE ZONE
+    - CENTER OF THE BOARD
+*/
+evaluateMouse(X, Y, Modifier, Value) :-
+    X > 4, X < 7,
+    Y > 4, Y < 7,
+    Value is Modifier * 15.
+
+/*
+    YELLOW ZONE
+    - CAN MOVE TO CENTER
+*/
+evaluateMouse(X, _, Modifier, Value) :- 
+    X > 4, X < 7,
+    Value is Modifier * 10.
+evaluateMouse(_, Y, Modifier, Value) :- 
+    Y > 4, Y < 7,
+    Value is Modifier * 10.
+
+/* 
+    GREEN ZONE
+    - REST OF POSITIONS (BAD ONES)
+*/
+evaluateMouse(_, _, Modifier, Value) :- Value is Modifier * 5.
+
+% =========================================================================
+% Evaluate the position of a LION
+% =========================================================================
+
+/*
+    RED ZONE
+    - CAN MOVE TO TARGET
+*/
+evaluateLion(X, X, Modifier, Value) :- Value is Modifier * 20.
+evaluateLion(X, Y, Modifier, Value) :- Y = 11 - X, Value is Modifier * 20.
+evaluateLion(X, Y, Modifier, Value) :- Y = X - 3, Value is Modifier * 20.
+evaluateLion(X, Y, Modifier, Value) :- Y = 8 - X, Value is Modifier * 20.
+evaluateLion(X, Y, Modifier, Value) :- Y = X + 3, Value is Modifier * 20.
+evaluateLion(X, Y, Modifier, Value) :- Y = 14 - X, Value is Modifier * 20.
+
+/*
+    ORANGE ZONE
+    - CENTER OF THE BOARD
+*/
+evaluateLion(X, Y, Modifier, Value) :-
+    X > 4, X < 7,
+    Y > 4, Y < 7,
+    Value is Modifier * 15.
+
+/*
+    GREEN ZONE
+    - REST OF POSITIONS (BAD ONES)
+*/
+evaluateLion(_, _, Modifier, Value) :- Value is Modifier * 5.
 
 evaluateBigBrain(Board, Player, Value) :-
-    getGoalsPieces(Board, Goals),
+    getTargetPieces(Board, Goals),
     getBoardPoints(Board, 1, Player, Goals, Points),
     OtherPlayer is 1 - Player,
     findScaredPieces(Board, OtherPlayer, ScaredOtherPlayer),
     length(ScaredOtherPlayer, NumScaredOtherPlayer),
     % Formula
-    Value is Points * -1 - NumScaredOtherPlayer.
+    Value is -1 * Points - 100 * NumScaredOtherPlayer.
 
 getBoardPoints([], _, _, _, 0).
 getBoardPoints([Xs|Rest], X, Player, Goals, Points) :-

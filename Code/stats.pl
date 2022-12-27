@@ -44,6 +44,9 @@ getStats :-
     write('=          STATS           ='), nl,
     write('============================'), nl,
 
+    retractall(evaluationType(_)),
+    asserta(evaluationType(1)),
+
     N = 10,
 
     retractall(playerType(_,_)),
@@ -64,4 +67,24 @@ getStats :-
     write('Greedy Bot vs Greedy Bot'), nl,
     write('Number of games: '), write(N), nl,
     write('Greedy Bot 1 wins: '), write(P3), nl,
-    write('Greedy Bot 2 wins: '), write(P4), nl.
+    write('Greedy Bot 2 wins: '), write(P4), nl,
+
+    retractall(playerType(_,_)),
+    asserta(playerType(0, 3)), asserta(playerType(1, 2)),
+    loopGame(N, P5),
+    P6 is N - P5,
+
+    write('MiniMax Bot vs Greedy Bot'), nl,
+    write('Number of games: '), write(N), nl,
+    write('MiniMax wins: '), write(P5), nl,
+    write('Greedy  wins: '), write(P6), nl,
+    
+    retractall(playerType(_,_)),
+    asserta(playerType(0, 3)), asserta(playerType(1, 3)),
+    loopGame(N, P7),
+    P8 is N - P7,
+
+    write('MiniMax Bot vs MiniMax Bot'), nl,
+    write('Number of games: '), write(N), nl,
+    write('MiniMax 1 wins: '), write(P7), nl,
+    write('MiniMax 2  wins: '), write(P8), nl.

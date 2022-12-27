@@ -1,5 +1,6 @@
 :- use_module(library(lists)).
 :- use_module(library(random)).
+:- use_module(library(system), [now/1]).
 
 :- ensure_loaded('boards.pl').
 :- ensure_loaded('view.pl').
@@ -175,11 +176,9 @@ evaluate(Board, Player, Value) :-
     % Evaluate Pieces
     OtherPlayer is 1 - Player,
     findScaredPieces(Board, OtherPlayer, ScaredOtherPlayer),
-    findScaredPieces(Board, Player, ScaredPlayer),
-    length(ScaredPlayer, NumScaredPlayer),
     length(ScaredOtherPlayer, NumScaredOtherPlayer),
     % Formula
-    Value is -100 * Points + NumScaredPlayer - NumScaredOtherPlayer.
+    Value is -100 * Points - NumScaredOtherPlayer.
 
 evaluateBoards([], _, []).
 evaluateBoards([B|RestBoards], Player, [V-B|RT]) :-
@@ -187,6 +186,7 @@ evaluateBoards([B|RestBoards], Player, [V-B|RT]) :-
     evaluate(B, Player, V),
     evaluateBoards(RestBoards, Player, RT).
 
+evaluateBoards([], _, []).
 evaluateBoards([B|RestBoards], Player, [V-B|RT]) :-
     evaluationType(1),
     evaluateBigBrain(B, Player, V),
@@ -269,10 +269,10 @@ getPlayerPoints([H|T], Player, Acc, Points) :-
     getPlayerPoints(T, Player, Acc1, Points).
 
 getTargetPieces(Board, [P1,P2,P3,P4]) :- 
-    getPiece(4, 7,Board, P1),
-    getPiece(7, 7,Board, P2),
     getPiece(4, 4,Board, P3),
-    getPiece(7, 4,Board, P4).
+    getPiece(4, 7,Board, P1),
+    getPiece(7, 4,Board, P4),
+    getPiece(7, 7,Board, P2).
 
 % gameOver(+GameState, -Winner)
 % TEMPORARY FUNCTION JUST USED ON TESTS
@@ -558,6 +558,11 @@ startGame :-
     Winner < 3,
     displayWinnerMessage(Winner).
 
+init_random_state :-
+    now(X),
+    setrand(X).
+
 play :-
+    init_random_state,
     menu,
     startGame.
