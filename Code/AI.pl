@@ -108,7 +108,81 @@ evaluateMouse(_, _, _, 1).
 
 % Lions (NOT FINISHED)
 
+evaluateLion(X, Y, [7, _, _, _], 7) :-
+    Y = X + 4,
+    X > 2, X < 6,
+    Y > 2, Y < 6.
+
+evaluateLion(X, Y, [7, _, _, _], 7) :-
+    Y = 11 - X,
+    X > 2, X < 6,
+    Y > 2, Y < 6.
+
+evaluateLion(X, Y, [_, _, _, _], 4) :-
+    Y = X + 4,
+    X > 2, X < 6,
+    Y > 2, Y < 6.
+
+evaluateLion(X, Y, [_, _, _, _], 4) :-
+    Y = 11 - X,
+    X > 2, X < 6,
+    Y > 2, Y < 6.
+
+
+evaluateLion(X, X, [_, 7, _, _], 7) :-
+    X > 5, X < 9.
+
+evaluateLion(X, Y, [_, 7, _, _], 7) :-
+    Y = 14 - X,
+    X > 2, X < 6,
+    Y > 2, Y < 6.
+
+evaluateLion(X, X, [_, _, _, _], 4) :-
+    X > 5, X < 9.
+
+evaluateLion(X, Y, [_, _, _, _], 4) :-
+    Y = 14 - X,
+    X > 2, X < 6,
+    Y > 2, Y < 6.
+
+evaluateLion(X, X, [_, _, 7, _], 7) :-
+    X > 2, X < 6.
+    
+evaluateLion(X, Y, [_, _, 7, _], 7) :-
+    Y = 8 - X,
+    X > 2, X < 6,
+    Y > 5, Y < 9.
+
+evaluateLion(X, X, [_, _, _, _], 4) :-
+    X > 2, X < 6.
+    
+evaluateLion(X, Y, [_, _, _, _], 4) :-
+    Y = 8 - X,
+    X > 2, X < 6,
+    Y > 5, Y < 9.
+
+evaluateLion(X, Y, [_, _, _, 7], 7) :-
+    Y = 11 - X,
+    X > 5, X < 9,
+    Y > 5, Y < 9.
+
+evaluateLion(X, Y, [_, _, _, 7], 7) :-
+    Y = X - 3,
+    X > 5, X < 9,
+    Y > 5, Y < 9.
+
+evaluateLion(X, Y, [_, _, _, _], 4) :-
+    Y = 11 - X,
+    X > 5, X < 9,
+    Y > 5, Y < 9.
+
+evaluateLion(X, Y, [_, _, _, _], 4) :-
+    Y = X - 3,
+    X > 5, X < 9,
+    Y > 5, Y < 9.
+
 evaluateLion(_, _, _, 1).
+
 
 /*
 % Red

@@ -183,7 +183,13 @@ evaluate(Board, Player, Value) :-
 
 evaluateBoards([], _, []).
 evaluateBoards([B|RestBoards], Player, [V-B|RT]) :-
+    evaluationType(0),
     evaluate(B, Player, V),
+    evaluateBoards(RestBoards, Player, RT).
+
+evaluateBoards([B|RestBoards], Player, [V-B|RT]) :-
+    evaluationType(1),
+    evaluateBigBrain(B, Player, V),
     evaluateBoards(RestBoards, Player, RT).
 
 getBestBoards([V-B|RestBoards], V, [B|T]) :-
@@ -354,6 +360,14 @@ parsePlayerType(_, _) :-
     write('error: Invalid input, try again!'), nl,
     fail.
 
+parseEvaluationType(Input, Option) :-
+    readNumber(Input, Option),
+    Option > -1,
+    Option < 2.
+parseEvaluationType(_, _) :-
+    write('error: Invalid input, try again!'), nl,
+    fail.
+
 % =========================================================================
 % PLAY
 % =========================================================================
@@ -465,6 +479,11 @@ displayPlayerTypes(Player) :-
     write('2. Greedy'), nl,
     write('3. MinMax'), nl.
 
+displayEvaluationTypes :-
+    write('       EVALUATION TYPE        '), nl,
+    write('0. Simple'), nl,
+    write('1. Complex'), nl.
+
 getPlayerType(Player) :-
     getBuffer(Input),
     parsePlayerType(Input, Option),
@@ -476,10 +495,22 @@ readPlayerType(Player) :-
     displayPlayerTypes(Player),
     getPlayerType(Player).
 
+getEvaluationType :-
+    getBuffer(Input),
+    parseEvaluationType(Input, Option),
+    retractall(evaluationType(_)),
+    asserta(evaluationType(Option)).
+
+readEvaluationType :-
+    repeat,
+    displayEvaluationTypes,
+    getEvaluationType.
+
 menu :-
     displayInitalMessage,
     readPlayerType(0),
-    readPlayerType(1).
+    readPlayerType(1),
+    readEvaluationType.
 
 switchPlayer :-
     playerTurn(0),
