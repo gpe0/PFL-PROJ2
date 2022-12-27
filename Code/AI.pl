@@ -79,7 +79,7 @@ evaluateElephant(X, Y, Modifier, Value) :-
 evaluateElephant(_, 4, Modifier, Value) :- Value is Modifier * 15.
 evaluateElephant(_, 7, Modifier, Value) :- Value is Modifier * 15.
 evaluateElephant(X, X, Modifier, Value) :- Value is Modifier * 15.
-evaluateElephant(X, Y, Modifier, Value) :- Y = 11 - X, Value is Modifier * 15.
+evaluateElephant(X, Y, Modifier, Value) :- Y is 11 - X, Value is Modifier * 15.
 
 /*
     YELLOW ZONE
@@ -146,11 +146,11 @@ evaluateMouse(_, _, Modifier, Value) :- Value is Modifier * 5.
     - CAN MOVE TO TARGET
 */
 evaluateLion(X, X, Modifier, Value) :- Value is Modifier * 20.
-evaluateLion(X, Y, Modifier, Value) :- Y = 11 - X, Value is Modifier * 20.
-evaluateLion(X, Y, Modifier, Value) :- Y = X - 3, Value is Modifier * 20.
-evaluateLion(X, Y, Modifier, Value) :- Y = 8 - X, Value is Modifier * 20.
-evaluateLion(X, Y, Modifier, Value) :- Y = X + 3, Value is Modifier * 20.
-evaluateLion(X, Y, Modifier, Value) :- Y = 14 - X, Value is Modifier * 20.
+evaluateLion(X, Y, Modifier, Value) :- Y is 11 - X, Value is Modifier * 20.
+evaluateLion(X, Y, Modifier, Value) :- Y > 2, Y is X - 3, Value is Modifier * 20.
+evaluateLion(X, Y, Modifier, Value) :- Y > 2, Y is 8 - X, Value is Modifier * 20.
+evaluateLion(X, Y, Modifier, Value) :- Y < 9, Y is X + 3, Value is Modifier * 20.
+evaluateLion(X, Y, Modifier, Value) :- Y < 9, Y is 14 - X, Value is Modifier * 20.
 
 /*
     ORANGE ZONE
@@ -200,7 +200,3 @@ getRowPoints([Piece|Rest], X, Y, 1, Goals, Points) :-
 getRowPoints([_|Rest], X, Y, Player, Goals, Points) :-
     Y1 is Y + 1,
     getRowPoints(Rest, X, Y1, Player, Goals, Points).
-
-test111(X) :-
-    get_initial_board(B),
-    evaluateBigBrain(B, 0, X).

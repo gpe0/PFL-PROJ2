@@ -67,6 +67,11 @@ test_scare_wikipedia_example :-
 % GAME OVER
 % =========================================================================
 
+% gameOver(+GameState, -Winner)
+gameOver(Board, Winner) :-
+    getTargetPieces(Board, Pieces),
+    gameOverWinner(Pieces, Winner).
+
 test_gameOver :-
     board_game_is_over1(B1),
     board_game_is_over2(B2),
@@ -80,4 +85,90 @@ test_gameOver :-
     gameOver(B4, 2),
     gameOver(B5, 3),
     gameOver(B6, 3).
+
+% =========================================================================
+% EVALUATE
+% =========================================================================
+
+ev_draw_value(Value) :-
+    Value < 9,
+    format('  ~d    |', [Value]).
+ev_draw_value(Value) :-
+    Value < 99,
+    format('  ~d   |', [Value]).
+ev_draw_value(Value) :-
+    format(' ~d |', [Value]).
+
+ev_drawLineLoop(_, [], _).
+ev_drawLineLoop(Index, [H|T], 2) :-
+    I1 is Index + 1,
+    ev_draw_value(H),
+    ev_drawLineLoop(I1, T, 2).
+ev_drawLineLoop(Index, [_|T], Offset) :-
+    I1 is Index + 1,
+    write('       |'),
+    ev_drawLineLoop(I1, T, Offset).
+
+ev_drawLine(10, Y, 2) :-
+    write('10|'),
+    ev_drawLineLoop(0, Y, 2),
+    write('10'), nl.
+
+ev_drawLine(N, Y, 2) :-
+    format(' ~d|', [N]),
+    N1 is N mod 2,
+    ev_drawLineLoop(N1, Y, 2),
+    write(N), nl.
+
+ev_drawLine(N, Y, Offset) :-
+    write('  |'),
+    N1 is N mod 2,
+    ev_drawLineLoop(N1, Y, Offset), nl.
+
+ev_drawRow(Index, Row) :-
+    ev_drawLine(Index, Row, 1),
+    ev_drawLine(Index, Row, 2),
+    ev_drawLine(Index, Row, 3).
+
+ev_drawRowLoop(_, []).
+ev_drawRowLoop(Index, [H|T]) :-
+    ev_drawRow(Index, H),
+    write('   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  '), nl,
+    I1 is Index - 1,
+    ev_drawRowLoop(I1, T).
+
+ev_get_value(X, Y, Piece, Value) :-
+    evaluatePiece(Piece, X, Y, [0, 0, 0, 0], Value).
+
+ev_get_row(11, _, _, []).
+ev_get_row(X, Y, Piece, [Value|T]) :-
+    ev_get_value(X, Y, Piece, Value),
+    X1 is X + 1,
+    ev_get_row(X1, Y, Piece, T).
+
+ev_get_rows(11, _, []).
+ev_get_rows(Y, Piece, [H|T]) :-
+    ev_get_row(1, Y, Piece, H),
+    Y1 is Y + 1,
+    ev_get_rows(Y1, Piece, T).
+
+ev_get_board(Piece, Res) :-
+    ev_get_rows(1, Piece, Res).
     
+test_evaluate_elephant :-
+    ev_get_board(1, Board),
+    drawHeader,
+    ev_drawRowLoop(10, Board),
+    drawFooter.
+
+test_evaluate_mouse :-
+    ev_get_board(2, Board),
+    drawHeader,
+    ev_drawRowLoop(10, Board),
+    drawFooter.
+
+test_evaluate_lion :-
+    ev_get_board(3, Board),
+    drawHeader,
+    ev_drawRowLoop(10, Board),
+    drawFooter.

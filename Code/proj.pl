@@ -273,12 +273,6 @@ getTargetPieces(Board, [P1,P2,P3,P4]) :-
     getPiece(7, 4,Board, P4),
     getPiece(7, 7,Board, P2).
 
-% gameOver(+GameState, -Winner)
-% TEMPORARY FUNCTION JUST USED ON TESTS
-gameOver(Board, Winner) :-
-    getTargetPieces(Board, Pieces),
-    gameOverWinner(Pieces, Winner).
-
 gameOver(Winner) :-
     board(Board),
     getTargetPieces(Board, Pieces),
