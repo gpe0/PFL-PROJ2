@@ -558,11 +558,6 @@ startGame :-
     Winner < 3,
     displayWinnerMessage(Winner).
 
-init_random_state :-
-    now(X),
-    setrand(X).
-
 play :-
-    init_random_state,
     menu,
     startGame.
