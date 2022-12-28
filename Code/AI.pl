@@ -200,3 +200,87 @@ getRowPoints([Piece|Rest], X, Y, 1, Goals, Points) :-
 getRowPoints([_|Rest], X, Y, Player, Goals, Points) :-
     Y1 is Y + 1,
     getRowPoints(Rest, X, Y1, Player, Goals, Points).
+
+
+
+evaluateValue(Board, Player, Value) :-
+    evaluateBigBrain(Board, Player, V),
+    Value is V * -1,
+    updateBoard(Value, Board), !.
+
+
+maxValue(Board, Player, Depth, A, B, Value) :-
+    Depth1 is Depth + 1,
+    validPieces(Board, Player, Pieces),
+    generateBoards(Board, Player, Pieces, [], NextBoards),
+    random_permutation(NextBoards, ShuffledBoards),
+    V = -100000,
+    maxValueAux(ShuffledBoards, Player, Depth1, A, B, V, Value), !.
+
+
+minValue(Board, Player, Depth, A, B, Value) :-
+    Depth1 is Depth + 1,
+    validPieces(Board, Player, Pieces),
+    generateBoards(Board, Player, Pieces, [], NextBoards),
+    V = 100000,
+    minValueAux(NextBoards, Player, Depth1, A, B, V, Value), !.
+
+
+maxValueAux([], _, _, _, _, Value, Value):- !.
+
+maxValueAux([Board|Rest], Player, 3, A, B, CurrentValue, NewValue) :-
+    evaluateValue(Board, Player, V1),
+    max(CurrentValue, V1, BestValue),
+    V1 < B,
+    max(A, V1, NewA),
+    maxValueAux(Rest, Player, 3, NewA, B, BestValue, NewValue), !.
+
+maxValueAux([Board|Rest], Player, Depth, A, B, CurrentValue, NewValue) :-
+    Depth \= 3,
+    OtherPlayer is 1 - Player,
+    minValue(Board, OtherPlayer, Depth, A, B, V1),
+    max(CurrentValue, V1, BestValue),
+    V1 < B,
+    max(A, V1, NewA),
+    maxValueAux(Rest, Player, Depth, NewA, B, BestValue, NewValue), !.
+
+maxValueAux(_, _, Depth, A, B,  CurrentValue, CurrentValue):- !.
+
+minValueAux([], _, _, _, _, Value, Value):- !.
+
+minValueAux([Board|Rest], Player, Depth, A, B, CurrentValue, NewValue) :-
+    OtherPlayer is 1 - Player,
+    maxValue(Board, OtherPlayer, Depth, A, B, V1),
+    min(CurrentValue, V1, BestValue),
+    V1 > A,
+    min(B, V1, NewB),
+    minValueAux(Rest, Player, Depth, A, NewB, BestValue, NewValue), !.
+
+minValueAux(_, _, _, _, _, CurrentValue, CurrentValue):- !.
+
+
+%minMaxBoard(Value, Board)
+updateBoard(Value, Board) :-  
+    minMaxBoard(V, _),
+    V < Value,
+    retractall(minMaxBoard(_, _)),
+    asserta(minMaxBoard(Value, Board)).
+
+updateBoard(_, _).
+
+
+max(A, B, A) :- A >= B.
+max(A, B, B) :- B > A.
+
+min(A, B, A) :- A =< B.
+min(A, B, B) :- B < A.
+
+
+test111(X) :- 
+    retractall(minMaxBoard(_)),
+    asserta(minMaxBoard(-100000, [])), 
+    get_initial_board(B),
+    maxValue(B, 0, 0, -100000, 100000, X),
+    minMaxBoard(Y, New),
+    nl,nl,write(Y), nl,
+    drawBoard(New).
