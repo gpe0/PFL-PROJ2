@@ -144,14 +144,6 @@ validPiecesAux(X, Y, Board, Player, P) :-
     playerPiece(P, Player),
     getMoves(X, Y, P, Board, Player, [_|_]).
 
-getRandomPiece(Board, Player, X-Y-Piece) :-
-    validPieces(Board, Player, ValidPieces),
-    random_member(X-Y-Piece, ValidPieces).
-
-getRandomMove(Board, Player, X-Y-Piece, XF-YF) :-
-    getMoves(X, Y, Piece, Board, Player, ValidMoves),
-    random_member(XF-YF, ValidMoves).
-
 % =========================================================================
 % AI BIG BRAIN BOT
 % =========================================================================
@@ -194,34 +186,6 @@ evaluateBoards([B|RestBoards], Player, [V-B|RT]) :-
 getBestBoards([V-B|RestBoards], V, [B|T]) :-
     getBestBoards(RestBoards, V, T).
 getBestBoards(_, _, []).
-
-% =========================================================================
-% MINIMAX BIG BRAIN BOT
-% =========================================================================
-
-generateLevel2([], _, []).
-generateLevel2([Board|RestBoards], Player, [Board-Lv2Part|RT]) :-
-    %write('generating boards...'), nl,
-    validPieces(Board, Player, Pieces),
-    generateBoards(Board, Player, Pieces, [], Lv2Part),
-    generateLevel2(RestBoards, Player, RT).
-
-evaluateLevel2([], _, B, _, B).
-evaluateLevel2([Previous-Boards|RestBoards], Player, BestBoard, BestValue, Res) :-
-    %length(RestBoards, N),
-    %nl, write(N), nl,
-    evaluateBoards(Boards, Player, BoardsEvaluated),
-    sort(BoardsEvaluated, SortedBoards),
-    nth1(1, SortedBoards, V-_),
-    !,
-    handleEvaluate(Previous, V, BestBoard, BestValue, A, B),
-    evaluateLevel2(RestBoards, Player, A, B, Res).
-
-handleEvaluate(CandidateBoard, CandidateValue, _, ActualValue, CandidateBoard, CandidateValue) :-
-    CandidateValue < ActualValue.
-    %write('found better...'), nl.
-handleEvaluate(_, _, ActualBoard, ActualValue, ActualBoard, ActualValue).
-    %write('not better...'), nl.
 
 % =========================================================================
 % FEAR MECHANIC
@@ -451,7 +415,7 @@ turn_greedy(Board, Player, Pieces) :-
 turn_greedy_minmax(Board, Player, Pieces) :-
     retractall(moveBoard(_, _)),
     asserta(moveBoard(-100000, [])),
-    maxValue(Board, Player, 0, -100000, 100000, _),
+    maxValue(Board, Player, 0, -100000, 100000, _, Pieces),
     moveBoard(_, New),
     setBoard(New),
     retractall(moveBoard(_, _)), !.

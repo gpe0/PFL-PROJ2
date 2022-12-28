@@ -34,6 +34,14 @@ test_2 :-
     validPieces(B, 1, P),
     write(P).
 
+getRandomPiece(Board, Player, X-Y-Piece) :-
+    validPieces(Board, Player, ValidPieces),
+    random_member(X-Y-Piece, ValidPieces).
+
+getRandomMove(Board, Player, X-Y-Piece, XF-YF) :-
+    getMoves(X, Y, Piece, Board, Player, ValidMoves),
+    random_member(XF-YF, ValidMoves).
+
 test_random_bot :-
     get_initial_board(Board),
     getRandomPiece(Board, 1, X-Y-Piece),
