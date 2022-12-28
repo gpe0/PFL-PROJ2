@@ -167,39 +167,40 @@ evaluateLion(X, Y, Modifier, Value) :-
 */
 evaluateLion(_, _, Modifier, Value) :- Value is Modifier * 5.
 
+numScaredOnTarget([], Acc, Acc).
+numScaredOnTarget([X-Y-_|Rest], Acc, Res) :-
+    targetPosition(X, Y),
+    Acc1 is Acc + 1,
+    numScaredOnTarget(Rest, Acc1, Res).
+numScaredOnTarget([_|Rest], Acc, Res) :- numScaredOnTarget(Rest, Acc, Res).
+
 evaluateBigBrain(Board, Player, Value) :-
     getTargetPieces(Board, Goals),
-    getBoardPoints(Board, 1, Player, Goals, Points),
+    getBoardPoints(Board, 1, Player, Goals, 0, Points),
     OtherPlayer is 1 - Player,
     findScaredPieces(Board, OtherPlayer, ScaredOtherPlayer),
+    numScaredOnTarget(ScaredOtherPlayer, 0, ScaredOnTarget),
     length(ScaredOtherPlayer, NumScaredOtherPlayer),
     % Formula
-    Value is -1 * Points - 100 * NumScaredOtherPlayer.
+    Value is -1 * Points - 5000 * ScaredOnTarget - 25 * NumScaredOtherPlayer.
 
-getBoardPoints([], _, _, _, 0).
-getBoardPoints([Xs|Rest], X, Player, Goals, Points) :-
-    getRowPoints(Xs, X, 1, Player, Goals, XPoints),
+getBoardPoints([], _, _, _, Acc, Acc).
+getBoardPoints([Row|Rest], Y, Player, Goals, Acc, Points) :-
+    getRowPoints(Row, 1, Y, Player, Goals, 0, RowPoints),
+    Acc1 is Acc + RowPoints,
+    Y1 is Y + 1,
+    getBoardPoints(Rest, Y1, Player, Goals, Acc1, Points).
+
+getRowPoints([], _, _, _, _, Acc, Acc).
+getRowPoints([Piece|Rest], X, Y, Player, Goals, Acc, Points) :-
+    playerPiece(Piece, Player),
+    evaluatePiece(Piece, X, Y, Goals, Val),
+    Acc1 is Acc + Val,
     X1 is X + 1,
-    getBoardPoints(Rest, X1, Player, Goals, RestPoints),
-    Points is XPoints + RestPoints.
-
-getRowPoints([], _, _, _, _, 0).
-getRowPoints([Piece|Rest], X, Y, 0, Goals, Points) :-
-    Y1 is Y + 1,
-    Piece < 4,
-    evaluatePiece(Piece, X, Y, Goals, Val),
-    getRowPoints(Rest, X, Y1, 0, Goals, RestPoints),
-    Points is Val + RestPoints.
-getRowPoints([Piece|Rest], X, Y, 1, Goals, Points) :-
-    Y1 is Y + 1,
-    Piece > 3,
-    evaluatePiece(Piece, X, Y, Goals, Val),
-    getRowPoints(Rest, X, Y1, 1, Goals, RestPoints),
-    Points is Val + RestPoints.
-
-getRowPoints([_|Rest], X, Y, Player, Goals, Points) :-
-    Y1 is Y + 1,
-    getRowPoints(Rest, X, Y1, Player, Goals, Points).
+    getRowPoints(Rest, X1, Y, Player, Goals, Acc1, Points).
+getRowPoints([_|Rest], X, Y, Player, Goals, Acc, Points) :-
+    X1 is X + 1,
+    getRowPoints(Rest, X1, Y, Player, Goals, Acc, Points).
 
 
 evaluateValue(Board, Player, Value) :-

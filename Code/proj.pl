@@ -167,9 +167,10 @@ evaluate(Board, Player, Value) :-
     % Evaluate Pieces
     OtherPlayer is 1 - Player,
     findScaredPieces(Board, OtherPlayer, ScaredOtherPlayer),
+    numScaredOnTarget(ScaredOtherPlayer, 0, ScaredOnTarget),
     length(ScaredOtherPlayer, NumScaredOtherPlayer),
     % Formula
-    Value is -100 * Points - NumScaredOtherPlayer.
+    Value is -100 * Points - 50 * ScaredOnTarget - NumScaredOtherPlayer.
 
 evaluateBoards([], _, []).
 evaluateBoards([B|RestBoards], Player, [V-B|RT]) :-
@@ -232,10 +233,10 @@ getPlayerPoints([H|T], Player, Acc, Points) :-
     getPlayerPoints(T, Player, Acc1, Points).
 
 getTargetPieces(Board, [P1,P2,P3,P4]) :- 
-    getPiece(4, 4,Board, P3),
-    getPiece(4, 7,Board, P1),
-    getPiece(7, 4,Board, P4),
-    getPiece(7, 7,Board, P2).
+    getPiece(4, 4, Board, P1),
+    getPiece(7, 4, Board, P2),
+    getPiece(4, 7, Board, P3),
+    getPiece(7, 7, Board, P4).
 
 gameOver(Winner) :-
     board(Board),
