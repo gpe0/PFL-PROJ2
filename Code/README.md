@@ -12,7 +12,35 @@
 
 ## Instalação e Execução
 
+Deve garantir que possui o SICStus Prolog na versão 4.7.1.
+
+De seguida, basta abrir o SICStus e consultar o ficheiro `proj.pl`
+
+Para começar um jogo deve inserir o predicado:
+
+```prolog
+|: play.
+```
+
 ## Descrição do jogo
+
+O jogo desenrola-se em um tabuleiro de damas 10x10 com três tipos de peças animais que se movem como a rainha, o bispo e a torre no xadrez. (elefante, leão e rato respetivamente)
+
+Duas características distintivas do jogo são:
+- Ausência de captura
+- Domínio pedra-papel-tesoura entre os três tipos de peças
+  
+Cada jogador controla seis animais, dois de cada tipo, e o objetivo do jogo é ocupar três das quatro casas objetivo que estão localizados perto do centro do tabuleiro.
+
+Os animais de um jogador são amigáveis entre si, o que significa que eles podem ocupar quadrados adjacentes um ao outro. 
+
+No entanto, em relação a animais de jogadores distintos, o rato teme o leão, o leão teme o elefante e o elefante teme o rato.
+
+Um animal não pode se mover para um quadrado, nem permanecer permanentemente em um quadrado adjacente a um animal que ele teme (com exceção de um animal "preso").
+
+Um animal diz-se preso quando está assustado e não pode realizar nenhuma jogada que o permita não continuar assustado.
+
+O jogador é obrigado a mover animais assustados.
 
 ## Lógica do jogo
 
@@ -597,14 +625,7 @@ test_evaluate_lion.
 
 ### Jogada do Computador
 
-...
-
-...
-
-...
-
-...
-
+Em relação ao computador `Random`:
 
 ```prolog
 % Handle Random Turn
@@ -615,7 +636,19 @@ turn_random(Board, Player, PiecesToMove) :-
     movePiece(X, Y, XF, YF, Board, NewBoard),
     !,
     setBoard(NewBoard).
+```
 
+O predicado recebe como parâmetro as peças que tem de jogar `PiecesToMove`.
+
+- `random_member(X-Y-Piece, PiecesToMove)` - Escolher uma peça à sorte
+- `getMoves(X, Y, Piece, Board, Player, ValidMoves)` - Calcular os movimentos possiveis dessa peça
+- `random_member(XF-YF, ValidMoves)` - Escolher um movimento à sorte
+- `movePiece(X, Y, XF, YF, Board, NewBoard)` - Realizar o movimento
+- `setBoard(NewBoard)` - Atualizar o board dinamicamente
+
+Em relação ao computador `Greedy`:
+
+```prolog
 % Handle Greedy Turn
 turn_greedy(Board, Player, Pieces) :-
     generateBoards(Board, Player, Pieces, [], NewBoards),
@@ -626,15 +659,34 @@ turn_greedy(Board, Player, Pieces) :-
     !,
     random_member(MoveChosen, BestBoards),
     setBoard(MoveChosen).
+```
 
+- `generateBoards(Board, Player, Pieces, [], NewBoards)` - Derivar tabuleiros correspondentes a todos os movimentos possíveis
+- `evaluateBoards(NewBoards, Player, BoardsEvaluated)` - Atribuir um valor a cada tabuleiro calculado
+- `sort(BoardsEvaluated, SortedBoards)` - Ordenar os tabuleiros obtidos
+- `nth1(1, SortedBoards, V-_)` - Obter o valor do melhor tabuleiro
+- `getBestBoards(SortedBoards, V, BestBoards)` - Filtrar os melhores tabuleiros
+- `random_member(MoveChosen, BestBoards)` - Escolher um movimento à sorte entre os melhores
+- `setBoard(MoveChosen)` - Atualizar o board dinamicamente
+
+Em relação ao computador `MiniMax`:
+
+```prolog
 % Handle MinMax Turn
 turn_greedy_minmax(Board, Player, Pieces) :-
-    generateBoards(Board, Player, Pieces, [], Lv1),
-    generateLevel2(Lv1, Player, Lv2),
-    evaluateLevel2(Lv2, Player, BestBoard, 99, Res),
-    !,
-    setBoard(Res).
+    retractall(moveBoard(_, _)),
+    asserta(moveBoard(-100000, [])),
+    maxValue(Board, Player, 0, -100000, 100000, _, Pieces),
+    moveBoard(_, New),
+    setBoard(New),
+    retractall(moveBoard(_, _)), !.
 ```
+
+- `retractall(moveBoard(_, _))` - Remove tabuleiros auxiliar do algoritmo MiniMax
+- `asserta(moveBoard(-100000, []))` - Guarda o melhor tabuleiro auxiliar do algoritmo MiniMax
+- `maxValue(Board, Player, 0, -100000, 100000, _, Pieces)` - Corre o algoritmo MiniMax
+- `moveBoard(_, New)` - Lê o tabuleiro resultante do algoritmo
+- `setBoard(New)` - Atualizar o board dinamicamente
 
 ## Conclusões
 
