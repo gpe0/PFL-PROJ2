@@ -240,7 +240,7 @@ maxValueAux([Board|Rest], Player, 3, A, B, CurrentValue, NewValue) :-
     max(A, V1, NewA),
     maxValueAux(Rest, Player, 3, NewA, B, BestValue, NewValue), !.
 
-maxValueAux([Board|Rest], Player, Depth, A, B, CurrentValue, CurrentValue) :-
+maxValueAux([Board|_], Player, Depth, _, _, CurrentValue, CurrentValue) :-
     Depth \= 3,
     getTargetPieces(Board, Pieces),
     gameOverWinner(Pieces, Winner),
@@ -258,14 +258,14 @@ maxValueAux([Board|Rest], Player, Depth, A, B, CurrentValue, NewValue) :-
     max(A, V1, NewA),
     maxValueAux(Rest, Player, Depth, NewA, B, BestValue, NewValue), !.
 
-maxValueAux([Board|Rest], Player, Depth, A, B,  CurrentValue, BestValue):-
+maxValueAux([Board|_], Player, Depth, A, B,  CurrentValue, BestValue):-
     Depth \= 3,
     OtherPlayer is 1 - Player,
     minValue(Board, OtherPlayer, Depth, A, B, V1),
     max(CurrentValue, V1, BestValue),
     V1 >= B, !.
 
-maxValueAux([Board|Rest], Player, 3, A, B,  CurrentValue, BestValue):-
+maxValueAux([Board|_], Player, 3, _, B,  CurrentValue, BestValue):-
     evaluateValue(Board, Player, V1),
     max(CurrentValue, V1, BestValue),
     V1 >= B, !.
@@ -280,7 +280,7 @@ minValueAux([Board|Rest], Player, Depth, A, B, CurrentValue, NewValue) :-
     min(B, V1, NewB),
     minValueAux(Rest, Player, Depth, A, NewB, BestValue, NewValue), !.
 
-minValueAux([Board|Rest], Player, Depth, A, B, CurrentValue, BestValue):-     
+minValueAux([Board|_], Player, Depth, A, B, CurrentValue, BestValue):-     
     OtherPlayer is 1 - Player,
     maxValue(Board, OtherPlayer, Depth, A, B, V1),
     min(CurrentValue, V1, BestValue),
@@ -313,5 +313,5 @@ test111(X) :-
     asserta(moveBoard(-100000, [])),
     get_initial_board(B),
     maxValue(B, 0, 0, -100000, 100000, X),
-    moveBoard(Y, New),
+    moveBoard(_, New),
     drawBoard(New).
