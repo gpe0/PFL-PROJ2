@@ -449,15 +449,12 @@ turn_greedy(Board, Player, Pieces) :-
 
 % Handle MinMax Turn
 turn_greedy_minmax(Board, Player, Pieces) :-
-    %write('generating level 1...'), nl,
-    generateBoards(Board, Player, Pieces, [], Lv1),
-    %write('generating level 2...'), nl,
-    generateLevel2(Lv1, Player, Lv2),
-    %write('evaluating level 2...'), nl,
-    evaluateLevel2(Lv2, Player, _BestBoard, 99, Res),
-    %write('done...'), nl,
-    !,
-    setBoard(Res).
+    retractall(moveBoard(_, _)),
+    asserta(moveBoard(-100000, [])),
+    maxValue(Board, Player, 0, -100000, 100000, _),
+    moveBoard(_, New),
+    setBoard(New),
+    retractall(moveBoard(_, _)), !.
 
 displayInitalMessage :-
     write('===== Barca Board Game ====='), nl,
