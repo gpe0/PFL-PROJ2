@@ -77,7 +77,7 @@ getMoves(X, Y, P, Board, Player, Moves) :-
     elephant(P),
     expand_up_down(X, Y, Board, Player, P, Moves1),
     expand_diagonal(X, Y, Board, Player, P, Moves2),
-    append(Moves1, Moves2, Moves),
+    append(Moves1, T, Moves), T = Moves2,
     !.
 
 expand_up_down(X, Y, Board, Player, P, Moves) :-
@@ -85,18 +85,20 @@ expand_up_down(X, Y, Board, Player, P, Moves) :-
     expand(X, Y, 1, 0, Board, Player, P, Right),
     expand(X, Y, 0, 1, Board, Player, P, Top),
     expand(X, Y, 0, -1, Board, Player, P, Down),
-    append(Left, Right, M1),
-    append(M1, Top, M2),
-    append(M2, Down, Moves).
+    % Append lists with diff. lists
+    append(Left, T1, M1), T1 = Right,
+    append(M1, T2, M2), T2 = Top,
+    append(M2, T3, Moves), T3 = Down.
 
 expand_diagonal(X, Y, Board, Player, P, Moves) :-
     expand(X, Y, -1, -1, Board, Player, P, DL),
     expand(X, Y, 1, 1, Board, Player, P, TR),
     expand(X, Y, -1, 1, Board, Player, P, TL),
     expand(X, Y, 1, -1, Board, Player, P, DR),
-    append(DL, DR, D),
-    append(TL, TR, T),
-    append(D, T, Moves).
+    % Append lists with diff. lists
+    append(DL, T1, M1), T1 = TR,
+    append(M1, T2, M2), T2 = TL,
+    append(M2, T3, Moves), T3 = DR.
 
 expand(X, Y, StepX, StepY, Board, Player, Piece, Moves) :-
     X1 is X + StepX,
@@ -152,7 +154,7 @@ generateBoards(_, _, [], Acc, Acc).
 generateBoards(Board, Player, [X-Y-Piece|RestPieces], Acc, Boards) :-
     getMoves(X, Y, Piece, Board, Player, ValidMoves),
     generateBoardsAux(Board, X-Y-Piece, ValidMoves, [], NewBoards),
-    append(Acc, NewBoards, Aux),
+    append(Acc, T1, Aux), T1 = NewBoards,
     generateBoards(Board, Player, RestPieces, Aux, Boards).
 
 generateBoardsAux(_, _, [], Acc, Acc).

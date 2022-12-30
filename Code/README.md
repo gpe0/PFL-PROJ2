@@ -12,7 +12,7 @@
 
 ## Instalação e Execução
 
-Deve garantir que possui o SICStus Prolog na versão 4.7.1.
+Deve garantir que tem instalado o SICStus Prolog na versão 4.7.1.
 
 De seguida, basta abrir o SICStus e consultar o ficheiro `proj.pl`
 
@@ -104,7 +104,7 @@ Exemplo de um tabuleiro:
 ].
 ```
 
-Os possíveis valores em cada átomo do tabuleiro são:
+Os possíveis valores em cada posição do tabuleiro são:
 
 0. No Piece
 1. Elephant (Player 1)
@@ -156,7 +156,7 @@ A tradução dos valores do tabuleiro para as peças é realizada no seguinte pr
 drawPlace(+Piece, +Offset, +Color).
 ```
 
-Sendo `Piece` o valor do tabuleiro; `Offset` a parte atual da peça; `Color` cor da posição
+Sendo `Piece` o valor do tabuleiro; `Offset` a parte da peça; `Color` cor da posição
 
 Exemplo - Desenho do elefante:
 
@@ -169,7 +169,12 @@ drawPlace(4, 2, _) :- write('  (2)  |').
 drawPlace(4, _, _) :- write('  ( )  |').
 ```
 
-As peças não diferem consoante a cor mas este parâmetro permite desenhar lugares vazios de uma forma mais clara e bonita.
+As peças não diferem consoante a cor mas este parâmetro permite desenhar lugares vazios de uma forma mais clara e bonita:
+
+```prolog
+drawPlace(0, _, 0) :- write('       |').
+drawPlace(0, _, 1) :- write(' . . . |').
+```
 
 A cor é calculada com o Index da coluna:
 
@@ -179,51 +184,13 @@ Color is Index mod 2
 
 Tabuleiro inicial:
 
-```
-      A       B       C       D       E       F       G       H       I       J     
-   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  
-  |       | . . . |       | . . . |()o o()|()o o()|       | . . . |       | . . . |
-10|       | . . . |       | . . . |  (2)  |  (2)  |       | . . . |       | . . . |10
-  |       | . . . |       | . . . |  ( )  |  ( )  |       | . . . |       | . . . |
-   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  
-  | . . . |       | . . . | @@@@@ || o o ||| o o || @@@@@ |       | . . . |       |
- 9| . . . |       | . . . |@o\2/o@| \ 2 / | \ 2 / |@o\2/o@|       | . . . |       |9
-  | . . . |       | . . . | @@@@@ | -\_/- | -\_/- | @@@@@ |       | . . . |       |
-   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  
-  |       | . . . |       | . . . |       | . . . |       | . . . |       | . . . |
- 8|       | . . . |       | . . . |       | . . . |       | . . . |       | . . . |8
-  |       | . . . |       | . . . |       | . . . |       | . . . |       | . . . |
-   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  
-  | . . . |       | . . . |   |   | . . . |       |   |   |       | . . . |       |
- 7| . . . |       | . . . | --|-- | . . . |       | --|-- |       | . . . |       |7
-  | . . . |       | . . . |   |   | . . . |       |   |   |       | . . . |       |
-   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  
-  |       | . . . |       | . . . |       | . . . |       | . . . |       | . . . |
- 6|       | . . . |       | . . . |       | . . . |       | . . . |       | . . . |6
-  |       | . . . |       | . . . |       | . . . |       | . . . |       | . . . |
-   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  
-  | . . . |       | . . . |       | . . . |       | . . . |       | . . . |       |
- 5| . . . |       | . . . |       | . . . |       | . . . |       | . . . |       |5
-  | . . . |       | . . . |       | . . . |       | . . . |       | . . . |       |
-   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  
-  |       | . . . |       |   |   |       | . . . |   |   | . . . |       | . . . |
- 4|       | . . . |       | --|-- |       | . . . | --|-- | . . . |       | . . . |4
-  |       | . . . |       |   |   |       | . . . |   |   | . . . |       | . . . |
-   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  
-  | . . . |       | . . . |       | . . . |       | . . . |       | . . . |       |
- 3| . . . |       | . . . |       | . . . |       | . . . |       | . . . |       |3
-  | . . . |       | . . . |       | . . . |       | . . . |       | . . . |       |
-   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  
-  |       | . . . |       | @@@@@ || o o ||| o o || @@@@@ | . . . |       | . . . |
- 2|       | . . . |       |@o\1/o@| \ 1 / | \ 1 / |@o\1/o@| . . . |       | . . . |2
-  |       | . . . |       | @@@@@ | -\_/- | -\_/- | @@@@@ | . . . |       | . . . |
-   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  
-  | . . . |       | . . . |       |()o o()|()o o()| . . . |       | . . . |       |
- 1| . . . |       | . . . |       |  (1)  |  (1)  | . . . |       | . . . |       |1
-  | . . . |       | . . . |       |  ( )  |  ( )  | . . . |       | . . . |       |
-   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  
-      A       B       C       D       E       F       G       H       I       J     
-```
+<div align="center">
+    <img src="./imgs/initial_board.png">
+</div>
+
+<div align="center" style="margin: 1em">
+    <strong>Nota:</strong>
+</div>
 
 ```
 A seguinte posição corresponde a uma casa objetivo.
@@ -237,51 +204,13 @@ A seguinte posição corresponde a uma casa objetivo.
 
 Tabuleiro durante o jogo:
 
-```
-      A       B       C       D       E       F       G       H       I       J     
-   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  
-  |       | . . . |       | . . . |()o o()|()o o()|       | . . . |       | . . . |
-10|       | . . . |       | . . . |  (2)  |  (2)  |       | . . . |       | . . . |10
-  |       | . . . |       | . . . |  ( )  |  ( )  |       | . . . |       | . . . |
-   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  
-  | . . . |       | . . . |       | . . . |       | @@@@@ |       | . . . |       |
- 9| . . . |       | . . . |       | . . . |       |@o\2/o@|       | . . . |       |9
-  | . . . |       | . . . |       | . . . |       | @@@@@ |       | . . . |       |
-   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  
-  |       | . . . |       | . . . || o o ||~~~~~~~|       | . . . | @@@@@ | . . . |
- 8|       | . . . |       | . . . | \ 2 / |~~~~~~~|       | . . . |@o\2/o@| . . . |8
-  |       | . . . |       | . . . | -\_/- |~~~~~~~|       | . . . | @@@@@ | . . . |
-   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  
-  | . . . |       | . . . |()o o()| . . . |       | @@@@@ |       | . . . |       |
- 7| . . . |       | . . . |  (1)  | . . . |       |@o\1/o@|       | . . . |       |7
-  | . . . |       | . . . |  ( )  | . . . |       | @@@@@ |       | . . . |       |
-   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  
-  |       | . . . |       | . . . |       | . . . |       | . . . |       | . . . |
- 6|       | . . . |       | . . . |       | . . . |       | . . . |       | . . . |6
-  |       | . . . |       | . . . |       | . . . |       | . . . |       | . . . |
-   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  
-  | . . . |       | . . . |       | . . . |       | . . . |       | . . . |       |
- 5| . . . |       | . . . |       | . . . |       | . . . |       | . . . |       |5
-  | . . . |       | . . . |       | . . . |       | . . . |       | . . . |       |
-   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  
-  |       | . . . |       || o o ||       | . . . |   |   | . . . |       | . . . |
- 4|       | . . . |       | \ 2 / |       | . . . | --|-- | . . . |       | . . . |4
-  |       | . . . |       | -\_/- |       | . . . |   |   | . . . |       | . . . |
-   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  
-  | . . . |       | . . . |       | . . . |       | . . . |       | . . . |       |
- 3| . . . |       | . . . |       | . . . |       | . . . |       | . . . |       |3
-  | . . . |       | . . . |       | . . . |       | . . . |       | . . . |       |
-   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  
-  || o o || . . . |       | . . . |       || o o ||       | . . . |       | . . . |
- 2| \ 1 / | . . . |       | . . . |       | \ 1 / |       | . . . |       | . . . |2
-  | -\_/- | . . . |       | . . . |       | -\_/- |       | . . . |       | . . . |
-   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  
-  | . . . |       |()o o()|       | . . . |       | . . . | @@@@@ | . . . |       |
- 1| . . . |       |  (1)  |       | . . . |       | . . . |@o\1/o@| . . . |       |1
-  | . . . |       |  ( )  |       | . . . |       | . . . | @@@@@ | . . . |       |
-   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  
-      A       B       C       D       E       F       G       H       I       J     
-```
+<div align="center">
+    <img src="./imgs/mid_board.png">
+</div>
+
+<div align="center" style="margin: 1em">
+    <strong>Nota:</strong>
+</div>
 
 ```
 A seguinte posição corresponde à posição anterior da peça que se moveu mais recentemente.
@@ -299,51 +228,13 @@ Também implementamos uma feature de permite o jogador observar os possíveis mo
 
 Exemplo complexo de movimentos do elefante na posição `E6`:
 
-```
-      A       B       C       D       E       F       G       H       I       J     
-   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  
-  |XXXXXXX| . . . |       | . . . |XXXXXXX|()o o()|       | . . . |XXXXXXX| . . . |
-10|XXXXXXX| . . . |       | . . . |XXXXXXX|  (1)  |       | . . . |XXXXXXX| . . . |10
-  |XXXXXXX| . . . |       | . . . |XXXXXXX|  ( )  |       | . . . |XXXXXXX| . . . |
-   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  
-  | . . . |XXXXXXX| . . . | @@@@@ |XXXXXXX|       | . . . |XXXXXXX| . . . |       |
- 9| . . . |XXXXXXX| . . . |@o\1/o@|XXXXXXX|       | . . . |XXXXXXX| . . . |       |9
-  | . . . |XXXXXXX| . . . | @@@@@ |XXXXXXX|       | . . . |XXXXXXX| . . . |       |
-   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  
-  |       | . . . |XXXXXXX| . . . |XXXXXXX|| o o ||       | . . . |       | . . . |
- 8|       | . . . |XXXXXXX| . . . |XXXXXXX| \ 1 / |       | . . . |       | . . . |8
-  |       | . . . |XXXXXXX| . . . |XXXXXXX| -\_/- |       | . . . |       | . . . |
-   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  
-  | . . . |       | . . . |   |   | . . . |       || o o ||       | . . . |       |
- 7| . . . |       | . . . | --|-- | . . . |       | \ 2 / |       | . . . |       |7
-  | . . . |       | . . . |   |   | . . . |       | -\_/- |       | . . . |       |
-   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  
-  |       | . . . |       || o o ||()o o()| . . . |       | . . . |XXXXXXX|XXXXXXX|
- 6|       | . . . |       | \ 2 / |  (1)  | . . . |       | . . . |XXXXXXX|XXXXXXX|6
-  |       | . . . |       | -\_/- |  ( )  | . . . |       | . . . |XXXXXXX|XXXXXXX|
-   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  
-  | . . . |       | . . . |       | . . . |XXXXXXX| . . . |       | . . . |       |
- 5| . . . |       | . . . |       | . . . |XXXXXXX| . . . |       | . . . |       |5
-  | . . . |       | . . . |       | . . . |XXXXXXX| . . . |       | . . . |       |
-   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  
-  |       |()o o()|XXXXXXX| @@@@@ |XXXXXXX| . . . || o o || . . . |       | . . . |
- 4|       |  (2)  |XXXXXXX|@o\1/o@|XXXXXXX| . . . | \ 1 / | . . . |       | . . . |4
-  |       |  ( )  |XXXXXXX| @@@@@ |XXXXXXX| . . . | -\_/- | . . . |       | . . . |
-   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  
-  | . . . |XXXXXXX| . . . |       | @@@@@ |       | . . . |       | . . . |       |
- 3| . . . |XXXXXXX| . . . |       |@o\2/o@|       | . . . |       | . . . |       |3
-  | . . . |XXXXXXX| . . . |       | @@@@@ |       | . . . |       | . . . |       |
-   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  
-  |XXXXXXX| . . . |       | . . . |       | . . . | @@@@@ | . . . |       | . . . |
- 2|XXXXXXX| . . . |       | . . . |       | . . . |@o\2/o@| . . . |       | . . . |2
-  |XXXXXXX| . . . |       | . . . |       | . . . | @@@@@ | . . . |       | . . . |
-   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  
-  | . . . |       | . . . |       | . . . |()o o()| . . . |       | . . . |       |
- 1| . . . |       | . . . |       | . . . |  (2)  | . . . |       | . . . |       |1
-  | . . . |       | . . . |       | . . . |  ( )  | . . . |       | . . . |       |
-   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  
-      A       B       C       D       E       F       G       H       I       J     
-```
+<div align="center">
+    <img src="./imgs/moves_board.png">
+</div>
+
+<div align="center" style="margin: 1em">
+    <strong>Nota:</strong>
+</div>
 
 ```
 A seguinte posição corresponde a uma jogada VÁLIDA.
@@ -363,27 +254,10 @@ A imagem seguinte permite ver um diagrama com a estrutura high level do algoritm
     <img src="./imgs/turns.png">
 </div>
 
-Analisando primeiramente o predicado startGame:
+- Qual a distinção entre o `turn` e o `turnAction`?
 
-```prolog
-startGame :-
-    get_initial_board(InitialBoard),
-    setBoard(InitialBoard),
-    switchPlayer, % Turno do player 1
-    !,
-    repeat,
-    board(B), % Vai buscar o tabuleiro armazenado dinamicamente
-    drawBoard(B), % Desenha o tabuleiro
-    playerTurn(Player), % Vai buscar o jogador que deve jogar
-    removeLastPosition(B, Board), % Remove indicador de última posição (Feature referida anteriormente)
-    turn(Board, Player), % Realiza o turno
-    switchPlayer, % Troca a vez do jogador
-    gameOver(Winner), % Verifica se acabou
-    Winner < 3,
-    displayWinnerMessage(Winner).
-```
+O turn é responsável por analisar o board e verificar se o jogador tem peças assutadas e calcula as peças que ele pode jogar no turno. 
 
-O predicado turn tem como propósito verificar se o jogador tem peças assustadas ou não, e chamar o predicado turn_action com as peças que o jogador é obrigado a jogar.
 ```prolog
 % Test if player has scared pieces
 % If yes, he needs to play them
@@ -398,7 +272,7 @@ turn(Board, Player) :-
     turn_action(Board, Player, Pieces).
 ```
 
-Por sua vez o turn_action irá verificar o tipo do jogador do turno e redireciona a execução para o predicado adequado:
+O turnAction recebe as peças que é obrigado a jogar como argumento e dependendo do tipo do jogador irá chamar o predicado respetivo.
 
 ```prolog
 % If Player is Human
@@ -424,7 +298,7 @@ turn_action(Board, Player, PiecesToMove) :-
 
 Por fim tem então a lógica do turno de cada jogador: turn_human, turn_random, turn_greedy, turn_minmax.
 
-Iremos analisar o turn_human e os restantes têm uma lógica parecida:
+Iremos analisar o turn_human e os restantes irão ser analisados na Secção **Jogadas do Computador**:
 
 ```prolog
 % Handle Human Turn
@@ -472,7 +346,7 @@ Este algoritmo permite logo resolver o problema de as peças poderem passar por 
 
 #### Implementação do algoritmo de expansão:
 
-As peças podem expandir em 8 direções.
+As peças podem expandir no máximo em 8 direções.
 
 - O predicado `expand_cross` trata das direções horizontais e verticais.
 - O predicado `expand_diagonal` trata das direções na diagonal.
@@ -496,7 +370,7 @@ Que tem como argumentos:
 
 E unifica a variável Moves com os movimentos calculados.
 
-A implementação do predicado `expand` é simples visto e chama outro predicado com um acumulador.
+A implementação do predicado `expand` é simples visto que chama outro predicado com um acumulador.
 
 ```prolog
 expand(X, Y, StepX, StepY, Board, Player, Piece, Moves) :-
@@ -550,6 +424,8 @@ No início de cada jogo é pedido ao utilizador para indicar o tipo de evaluate 
 
 #### Avaliação "Simple"
 
+Esta foi o primeiro **evaluate** que fizemos sendo o mais simples.
+
 A avaliação tem como principal fator o número de pontos que o Player tem.
 
 Com pontos quer-se dizer com número de casas objetivo dominadas.
@@ -571,9 +447,9 @@ evaluate(Board, Player, Value) :-
 
 #### Avaliação "Complex" - Código no ficheiro AI.pl
 
-A avaliação continua a ter em consideração o número de pontos do player (apesar de ser calculada de outra forma) e o número de peças do outro player assustadas que é essencial para uma boa jogabilidade.
+Esta avaliação continua a ter em consideração o número de pontos do player (apesar de ser calculada de outra forma) e o número de peças do outro player assustadas que é essencial para uma boa jogabilidade.
 
-O que difere é a introdução de outro fator que corresponde a uma avaliação das posições atuais das peças do tabuleiro.
+O que difere esta avaliação é a introdução de outro fator que corresponde a uma avaliação das posições atuais das peças do tabuleiro.
 
 As posições do tabuleiro serão divididas por zonas para cada peça, onde cada zona equivale a um valor.
 
@@ -585,11 +461,15 @@ Zonas do elefante: (ignorar peças no background)
 
 Zonas do rato: (ignorar peças no background)
 
-IMG
+<div align="center">
+    <img src="./imgs/diagram_mouse.png">
+</div>
 
 Zonas do leão: (ignorar peças no background)
 
-IMG
+<div align="center">
+    <img src="./imgs/diagram_lion.png">
+</div>
 
 Cada zona equivale a um certo valor:
 
