@@ -223,7 +223,7 @@ getPiecesToPlay(Board, Player, ScaredPieces) :-
 getPiecesToPlay(Board, Player, Pieces) :-
     validPieces(Board, Player, Pieces).
 
-maxValue(Board, Player, Depth, A, B, Value, Pieces) :-
+maxValue(Board, Player, Depth, A, B, Pieces, Value) :-
     Depth1 is Depth + 1,
     generateBoards(Board, Player, Pieces, [], NextBoards),
     random_permutation(NextBoards, ShuffledBoards),
@@ -284,7 +284,7 @@ minValueAux([], _, _, _, _, Value, Value):- !.
 minValueAux([Board|Rest], Player, Depth, A, B, CurrentValue, NewValue) :-
     OtherPlayer is 1 - Player,
     getPiecesToPlay(Board, OtherPlayer, Pieces),
-    maxValue(Board, OtherPlayer, Depth, A, B, V1, Pieces),
+    maxValue(Board, OtherPlayer, Depth, A, B, Pieces, V1),
     min(CurrentValue, V1, BestValue),
     V1 > A,
     min(B, V1, NewB),
@@ -293,7 +293,7 @@ minValueAux([Board|Rest], Player, Depth, A, B, CurrentValue, NewValue) :-
 minValueAux([Board|_], Player, Depth, A, B, CurrentValue, BestValue):-     
     OtherPlayer is 1 - Player,
     getPiecesToPlay(Board, OtherPlayer, Pieces),
-    maxValue(Board, OtherPlayer, Depth, A, B, V1, Pieces),
+    maxValue(Board, OtherPlayer, Depth, A, B, Pieces, V1),
     min(CurrentValue, V1, BestValue),
     V1 =< A, !.
 
@@ -301,22 +301,22 @@ minValueAux([Board|_], Player, Depth, A, B, CurrentValue, BestValue):-
 %minMaxBoard(Value, Board)
 forceUpdateBoard(V1, Board) :-
     retractall(moveBoard(_, _)),
-    asserta(moveBoard(V1, Board)).
+    asserta(moveBoard(V1, Board)), !.
 
 updateMoveBoard(V1, Board) :-
     moveBoard(V2, _),
     V2 < V1,
     retractall(moveBoard(_, _)),
-    asserta(moveBoard(V1, Board)).
+    asserta(moveBoard(V1, Board)), !.
 
 updateMoveBoard(_, _).
 
 
-max(A, B, A) :- A >= B.
-max(A, B, B) :- B > A.
+max(A, B, A) :- A >= B, !.
+max(A, B, B) :- B > A, !.
 
-min(A, B, A) :- A =< B.
-min(A, B, B) :- B < A.
+min(A, B, A) :- A =< B, !.
+min(A, B, B) :- B < A, !.
 
 
 test111(X) :- 
@@ -324,6 +324,6 @@ test111(X) :-
     asserta(moveBoard(-100000, [])),
     get_initial_board(B),
     getPiecesToPlay(B, 0, Pieces),
-    maxValue(B, 0, 0, -100000, 100000, X, Pieces),
+    maxValue(B, 0, 0, -100000, 100000, Pieces, X),
     moveBoard(_, New),
     drawBoard(New).
