@@ -476,8 +476,9 @@ displayEvaluationTypes(Player) :-
 getPlayerType(Player) :-
     getBuffer(Input),
     parsePlayerType(Input, Option),
+    Option1 is Option - 1,
     retractall(playerType(Player, _)),
-    asserta(playerType(Player, Option)).
+    asserta(playerType(Player, Option1)).
 
 readPlayerType(Player) :-
     repeat,
@@ -487,12 +488,13 @@ readPlayerType(Player) :-
 getEvaluationType(Player) :-
     getBuffer(Input),
     parseEvaluationType(Input, Option),
+    Option1 is Option - 1,
     retractall(evaluationType(Player, _)),
-    asserta(evaluationType(Player, Option)).
+    asserta(evaluationType(Player, Option1)).
 
 readEvaluationType(Player) :-
     playerType(Player, Type),
-    Type \= 0,
+    Type > 1,
     repeat,
     displayEvaluationTypes(Player),
     getEvaluationType(Player).
