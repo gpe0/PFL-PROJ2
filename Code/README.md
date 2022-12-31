@@ -19,7 +19,7 @@ De seguida, basta abrir o SICStus e consultar o ficheiro `proj.pl`
 Para começar um jogo deve inserir o predicado:
 
 ```prolog
-|: play.
+| ?- play.
 ```
 
 ## Descrição do jogo
@@ -46,12 +46,14 @@ O jogador é obrigado a mover animais assustados.
 
 ### Representação interna do estado do jogo
 
-O estado do jogo é representado `dinamicamente` com os seguintes 3 predicados:
+O estado do jogo é representado `dinamicamente` com os seguintes predicados:
 
 ```prolog
 playerType/2
 board/1
 playerTurn/1
+evaluationType/2
+num_turn/1
 ```
 
 - `playerType(+Player, -Type)`:
@@ -122,6 +124,47 @@ Os possíveis valores em cada posição do tabuleiro são:
 - `playerTurn(+Player)`:
 
 Verifica se é a vez de o Player (0/1) jogar.
+
+---
+
+- `evaluationType(+Player, +EvaluationType)`:
+
+Verifica que tipo de **evaluate** o jogador está a usar.
+
+---
+
+- `num_turn(-Num)`:
+
+Unifica a variável **Num** com o número do turno.
+
+Este predicado foi adicionado devido a um problema relacionado com a natureza do computador greedy.
+
+Ele permite terminar a partida em **Empate** se o número de turnos atingir os 50.
+
+Mostra-se de seguida uma imagem do problema:
+
+<div align="center">
+    <img src="./imgs/1.png">
+</div>
+
+O jogo a partir de aqui vai entrar de loop de movimentos devido a natureza do `greedy` e do `próprio jogo`!
+
+O elefante que está no objetivo está assustado devido ao rato presente no centro do tabuleiro.
+
+O jogador é então obrigado a mover o elefante e o algoritmo greedy `corretamente` irá mover o elefante para o objetivo de cima. Não move para o objetivo da esquerda pois daria um tabuleiro com pior valor, visto que retirava valor às peças do mesmo quadrante.
+
+Na vez do outro jogador, o algoritmo greedy tem oportunidade de retirar o mesmo elefante do objetivo e mexe o rato para perto dele.
+
+Novamente, o jogador é então obrigado a mover o elefante e mais uma vez se irá mover para outro objetivo.
+
+E o rato vai atrás e entra-se num loop da caça do rato ao elefante.
+
+Este problema é muito específico e acontece quando:
+- Existe um rato nos 4 quadrados centrais
+- Um elefante num objetivo com possibilidade ir para outro objetivo diretamente
+- Não existe nenhum outro movimento de outra peça que permita igualar o valor do tabuleiro
+
+De realçar que os movimentos são de facto os melhores e o algoritmo greedy está a se comportar como devia.
 
 ### Visualização do estado de jogo
 
@@ -245,6 +288,24 @@ A seguinte posição corresponde a uma jogada VÁLIDA.
 |XXXXXXX|
  ------- 
 ```
+
+---
+
+Em relação ao input ....
+
+....
+
+....
+
+....
+
+....
+
+....
+
+....
+
+....
 
 ### Execução de Jogadas
 
