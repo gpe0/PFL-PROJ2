@@ -195,11 +195,11 @@ value_simple(Board, Player, Value) :-
 
 evaluateBoards([], _, []).
 evaluateBoards([B|RestBoards], Player, [V-B|RT]) :-
-    evaluationType(0),
+    evaluationType(Player, 0),
     value_simple(B, Player, V),
     evaluateBoards(RestBoards, Player, RT).
 evaluateBoards([B|RestBoards], Player, [V-B|RT]) :-
-    evaluationType(1),
+    evaluationType(Player, 1),
     value(B, Player, V),
     evaluateBoards(RestBoards, Player, RT).
 
@@ -435,7 +435,7 @@ choose_move(Board, Player, 2, PiecesToMove) :-
 choose_move(Board, Player, 3, PiecesToMove) :-
     retractall(moveBoard(_, _)),
     asserta(moveBoard(-100000, [])),
-    maxValue(Board, Player, 0, -100000, 100000, _, PiecesToMove),
+    maxValue(Board, Player, 0, -100000, 100000, PiecesToMove, _),
     moveBoard(_, New),
     setBoard(New),
     retractall(moveBoard(_, _)), !.
@@ -453,8 +453,9 @@ displayPlayerTypes(Player) :-
     write('2. Greedy'), nl,
     write('3. MinMax'), nl.
 
-displayEvaluationTypes :-
-    write('       EVALUATION TYPE        '), nl,
+displayEvaluationTypes(Player) :-
+    Aux is Player + 1,
+    format('       PLAYER ~d EVALUATION TYPE        ', [Aux]), nl,
     write('0. Simple'), nl,
     write('1. Complex'), nl.
 
@@ -469,22 +470,27 @@ readPlayerType(Player) :-
     displayPlayerTypes(Player),
     getPlayerType(Player).
 
-getEvaluationType :-
+getEvaluationType(Player) :-
     getBuffer(Input),
     parseEvaluationType(Input, Option),
-    retractall(evaluationType(_)),
-    asserta(evaluationType(Option)).
+    retractall(evaluationType(Player, _)),
+    asserta(evaluationType(Player, Option)).
 
-readEvaluationType :-
+readEvaluationType(Player) :-
+    playerType(Player, Type),
+    Type \= 0,
     repeat,
-    displayEvaluationTypes,
-    getEvaluationType.
+    displayEvaluationTypes(Player),
+    getEvaluationType(Player).
+
+readEvaluationType(_).
 
 menu :-
     displayInitalMessage,
     readPlayerType(0),
+    readEvaluationType(0),
     readPlayerType(1),
-    readEvaluationType.
+    readEvaluationType(1).
 
 switchPlayer :-
     playerTurn(0),

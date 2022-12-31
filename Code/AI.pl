@@ -204,12 +204,12 @@ getRowPoints([_|Rest], X, Y, Player, Goals, Acc, Points) :-
 
 
 evaluateValue(Board, Player, Value) :-
-    evaluationType(0),
+    evaluationType(Player, 0),
     value_simple(Board, Player, V),
     Value is V * -1, !.
 
 evaluateValue(Board, Player, Value) :-
-    evaluationType(1),
+    evaluationType(Player, 1),
     value(Board, Player, V),
     Value is V * -1, !.
 
