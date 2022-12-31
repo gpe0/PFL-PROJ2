@@ -1,11 +1,47 @@
 % Draws the header of the board
-drawHeader :- 
-    write('      A       B       C       D       E       F       G       H       I       J     '), nl,
-    write('   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  '), nl.
+drawLineRecursive(0) :-
+    nl.
+
+drawLineRecursive(Index) :-
+    write('------- '),
+    New is Index - 1,
+    drawLineRecursive(New).
+
+drawHeader :-
+    boardWidth(Width),
+    write('       '),
+    drawHeaderRecursive(Width),
+    write('    '),
+    drawLineRecursive(Width).
+
+drawHeaderRecursive(0) :-
+    nl.
+
+drawHeaderRecursive(Index) :-
+    boardWidth(Width),
+    Code is 65 + Width - Index,
+    put_code(Code),
+    write('       '),
+    New is Index - 1,
+    drawFooterRecursive(New).
 
 % Draws the footer of the board
 drawFooter :-
-    write('      A       B       C       D       E       F       G       H       I       J     '), nl.
+    boardWidth(Width),
+    write('       '),
+    drawFooterRecursive(Width).
+
+drawFooterRecursive(0) :-
+    nl.
+
+drawFooterRecursive(Index) :-
+    boardWidth(Width),
+    Code is 65 + Width - Index,
+    put_code(Code),
+    write('       '),
+    New is Index - 1,
+    drawFooterRecursive(New).
+
 
 /*
 Piece:
@@ -104,19 +140,38 @@ drawLineLoop(Index, [H|T], Offset) :-
     +Pieces : Pieces of the row
     +Offset : Line of the row
 */
-drawLine(10, Pieces, 2) :-
-    write('10|'),
+drawLine(Height, Pieces, 2) :-
+    boardHeight(Height),
+    Height > 9,
+    write(' '),
+    write(Height),
+    write('|'),
     drawLineLoop(0, Pieces, 2),
-    write('10'), nl.
+    write(Height), nl.
+
+drawLine(Height, Pieces, 2) :-
+    boardHeight(Height),
+    write(' '),
+    write(Height),
+    write(' |'),
+    drawLineLoop(0, Pieces, 2),
+    write(Height), nl.
 
 drawLine(N, Pieces, 2) :-
+    N > 9,
     format(' ~d|', [N]),
     N1 is N mod 2,
     drawLineLoop(N1, Pieces, 2),
     write(N), nl.
 
+drawLine(N, Pieces, 2) :-
+    format(' ~d |', [N]),
+    N1 is N mod 2,
+    drawLineLoop(N1, Pieces, 2),
+    write(N), nl.
+
 drawLine(N, Pieces, Offset) :-
-    write('  |'),
+    write('   |'),
     N1 is N mod 2,
     drawLineLoop(N1, Pieces, Offset), nl.
 
@@ -143,8 +198,10 @@ drawRow(Index, Row) :-
 */
 drawRowLoop(_, []).
 drawRowLoop(Index, [H|T]) :-
+    boardWidth(Width),
     drawRow(Index, H),
-    write('   ------- ------- ------- ------- ------- ------- ------- ------- ------- -------  '), nl,
+    write('    '),
+    drawLineRecursive(Width),
     I1 is Index - 1,
     drawRowLoop(I1, T).
 
@@ -156,7 +213,8 @@ drawRowLoop(Index, [H|T]) :-
     +Board : Board to draw
 */
 display_game(Board) :- 
+    boardHeight(Height),
     drawHeader,
-    drawRowLoop(10, Board),
+    drawRowLoop(Height, Board),
     drawFooter,
     !.

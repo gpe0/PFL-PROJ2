@@ -1,3 +1,5 @@
+:- dynamic targetPosition/2.
+
 :- use_module(library(lists)).
 :- use_module(library(random)).
 
@@ -29,12 +31,6 @@ playerPiece(3, 0).
 playerPiece(4, 1).
 playerPiece(5, 1).
 playerPiece(6, 1).
-
-% targetPosition(X, Y)
-targetPosition(4, 4).
-targetPosition(4, 7).
-targetPosition(7, 4).
-targetPosition(7, 7).
 
 % =========================================================================
 % BOARD
@@ -251,11 +247,17 @@ getPlayerPoints([H|T], Player, Acc, Points) :-
     Acc1 is Acc + Point,
     getPlayerPoints(T, Player, Acc1, Points).
 
-getTargetPieces(Board, [P1,P2,P3,P4]) :- 
-    getPiece(4, 4, Board, P1),
-    getPiece(7, 4, Board, P2),
-    getPiece(4, 7, Board, P3),
-    getPiece(7, 7, Board, P4).
+getTargetPieces(Board, [P1,P2,P3,P4]) :-
+    boardWidth(Width),
+    boardHeight(Height),
+    X1 is div(Width, 2) - 1,
+    Y1 is div(Height, 2) - 1,
+    X2 is X1 + 3,
+    Y2 is Y1 + 3,
+    getPiece(X1, Y1, Board, P1),
+    getPiece(X1, Y2, Board, P2),
+    getPiece(X2, Y1, Board, P3),
+    getPiece(X2, Y2, Board, P4).
 
 gameOver(99) :-
     retract(num_turn(50)), !.
@@ -501,8 +503,145 @@ readEvaluationType(Player) :-
 
 readEvaluationType(_).
 
+even(N):- mod(N,2) =:= 0.
+
+%BoardSetup
+setupBoard :-
+    readBoardPreference,
+    setupCustomBoard.
+
+%Dimensions
+readBoardPreference :-
+    repeat,
+    displayBoardPreferences,
+    getBoardPreference.
+
+displayBoardPreferences :-
+    write('       BOARD PREFERENCE        '), nl,
+    write('0. Default'), nl,
+    write('1. Custom'), nl,
+    write('Note that selecting this option will prevent you from using complex evaluation'), nl.
+
+getBoardPreference :-
+    getBuffer(Input),
+    parseBoardPreference(Input, Option),
+    retractall(boardPreference(_)),
+    asserta(boardPreference(Option)).
+
+parseBoardPreference(Input, Option) :-
+    readNumber(Input, Option),
+    Option > -1,
+    Option < 2.
+
+setupCustomBoard :-
+    boardPreference(0),
+    retractall(boardHeight(_)),
+    asserta(boardHeight(10)),
+    retractall(boardWidth(_)),
+    asserta(boardWidth(10)),
+    setupEmptyBoard.
+
+setupCustomBoard :-
+    boardPreference(1),
+    readBoardDimensions,
+    setupEmptyBoard.
+
+setupEmptyBoard :-
+    boardWidth(Width),
+    boardHeight(Height),
+    length(Row, Width),
+    maplist(=(0), Row),
+    length(Board, Height),
+    maplist(=(Row), Board),
+    setVictorySquareLoop(Height, Width, Board, NewBoard),
+    setDefaultPieces(NewBoard, NewerBoard),
+    setBoard(NewerBoard),
+    display_game(NewerBoard).
+
+setDefaultPieces(Board, NewBoard) :-
+    boardHeight(Height),
+    boardWidth(Width),
+    X2 is div(Width, 2),
+    X1 is X2 - 1,
+    X3 is X2 + 1,
+    X4 is X3 + 1,
+    Y1 is Height - 1,
+    setPiece(X2, Height, Board, 4, TempBoard1),
+    setPiece(X3, Height, TempBoard1, 4, TempBoard2),
+    setPiece(X1, Y1, TempBoard2, 6, TempBoard3),
+    setPiece(X2, Y1, TempBoard3, 5, TempBoard4),
+    setPiece(X3, Y1, TempBoard4, 5, TempBoard5),
+    setPiece(X4, Y1, TempBoard5, 6, TempBoard6),
+    setPiece(X2, 1, TempBoard6, 1, TempBoard7),
+    setPiece(X3, 1, TempBoard7, 1, TempBoard8),
+    setPiece(X1, 2, TempBoard8, 3, TempBoard9),
+    setPiece(X2, 2, TempBoard9, 2, TempBoard10),
+    setPiece(X3, 2, TempBoard10, 2, TempBoard11),
+    setPiece(X4, 2, TempBoard11, 3, NewBoard).
+
+
+setVictorySquareLoop(Height, Width, Board, NewBoard) :-
+    X is div(Width,2) - 1,
+    Y is div(Height, 2) - 1,
+    retractall(targetPosition(_,_)),
+    setVictorySquare(X,Y, Board, TempBoard1),
+    X1 is X + 3,
+    setVictorySquare(X1,Y, TempBoard1, TempBoard2),
+    Y1 is Y + 3,
+    setVictorySquare(X,Y1, TempBoard2, TempBoard3),
+    setVictorySquare(X1,Y1, TempBoard3, NewBoard).
+
+setVictorySquare(X, Y, Board, NewBoard) :-
+    nth1(Y, Board, Row, RestBoard),
+    nth1(X, Row, _, RestRow),
+    nth1(X, ModifiedRow, 7, RestRow),
+    nth1(Y, NewBoard, ModifiedRow, RestBoard),
+    asserta(targetPosition(X, Y)).
+
+readBoardDimensions :-
+    readBoardWidth,
+    readBoardHeight.
+
+readBoardWidth :-
+    repeat,
+    displayBoardWidth,
+    getBoardWidth.
+
+readBoardHeight :-
+    repeat,
+    displayBoardHeight,
+    getBoardHeight.
+
+displayBoardWidth :-
+    write('       BOARD DIMENSIONS        '), nl,
+    write('Please choose a width for your board'), nl,
+    write('Note that the width must be between 6 and 26'), nl.
+
+displayBoardHeight :-
+    write('Please choose a height for your board'), nl,
+    write('Note that the height must be between 6 and 26'), nl.
+
+getBoardWidth :-
+    getBuffer(Input),
+    parseBoardDimensions(Input, Option),
+    retractall(boardWidth(_)),
+    asserta(boardWidth(Option)).
+
+getBoardHeight :-
+    getBuffer(Input),
+    parseBoardDimensions(Input, Option),
+    retractall(boardHeight(_)),
+    asserta(boardHeight(Option)).
+
+parseBoardDimensions(Input, Option) :-
+    readNumber(Input, Option),
+    even(Option),
+    Option > 5,
+    Option < 27.
+
 menu :-
     displayInitalMessage,
+    setupBoard,
     readPlayerType(0),
     readEvaluationType(0),
     readPlayerType(1),
@@ -539,8 +678,6 @@ resetPosition(X, Y, Board, Res) :-
     setPiece(X, Y, Board, 0, Res).
 
 startGame :-
-    initial_state(InitialBoard),
-    setBoard(InitialBoard),
     switchPlayer, % Will set player 0 turn
     !,
     repeat,
