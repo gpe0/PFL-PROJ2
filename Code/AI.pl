@@ -174,7 +174,7 @@ numScaredOnTarget([X-Y-_|Rest], Acc, Res) :-
     numScaredOnTarget(Rest, Acc1, Res).
 numScaredOnTarget([_|Rest], Acc, Res) :- numScaredOnTarget(Rest, Acc, Res).
 
-evaluateBigBrain(Board, Player, Value) :-
+value(Board, Player, Value) :-
     getTargetPieces(Board, Goals),
     getBoardPoints(Board, 1, Player, Goals, 0, Points),
     OtherPlayer is 1 - Player,
@@ -205,12 +205,12 @@ getRowPoints([_|Rest], X, Y, Player, Goals, Acc, Points) :-
 
 evaluateValue(Board, Player, Value) :-
     evaluationType(0),
-    evaluate(Board, Player, V),
+    value_simple(Board, Player, V),
     Value is V * -1, !.
 
 evaluateValue(Board, Player, Value) :-
     evaluationType(1),
-    evaluateBigBrain(Board, Player, V),
+    value(Board, Player, V),
     Value is V * -1, !.
 
 % Test if player has scared pieces
@@ -322,8 +322,8 @@ min(A, B, B) :- B < A, !.
 test111(X) :- 
     retractall(moveBoard(_)),
     asserta(moveBoard(-100000, [])),
-    get_initial_board(B),
+    initial_state(B),
     getPiecesToPlay(B, 0, Pieces),
     maxValue(B, 0, 0, -100000, 100000, Pieces, X),
     moveBoard(_, New),
-    drawBoard(New).
+    display_game(New).

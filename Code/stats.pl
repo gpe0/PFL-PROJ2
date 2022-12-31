@@ -3,7 +3,7 @@
 % =========================================================================
 
 statsGame(Winner) :-
-    get_initial_board(InitialBoard),
+    initial_state(InitialBoard),
     setBoard(InitialBoard),
     switchPlayer,
     !,

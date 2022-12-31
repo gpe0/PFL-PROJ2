@@ -2,7 +2,7 @@
 % INITIAL BOARD OF THE GAME
 % =========================================================================
 
-get_initial_board(B) :-
+initial_state(B) :-
     B = [
         [0, 0, 0, 0, 4, 4, 0, 0, 0, 0],
         [0, 0, 0, 6, 5, 5, 6, 0, 0, 0],
@@ -73,7 +73,7 @@ board_game_is_over4(B) :-
         [0, 0, 0, 0, 1, 1, 0, 0, 0, 0]
     ].
 board_game_not_over1(B) :-
-    get_initial_board(B).
+    initial_state(B).
 board_game_not_over2(B) :-
     B = [
         [0, 0, 0, 0, 4, 4, 0, 0, 0, 0],

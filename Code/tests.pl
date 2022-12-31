@@ -3,20 +3,20 @@
 % =========================================================================
 
 test_getPiece :-
-    get_initial_board(B),
+    initial_state(B),
     getPiece(1, 1, B, 0),
     getPiece(5, 1, B, 4),
     getPiece(-5, -5, B, 99).
 
 test_setPiece :-
-    get_initial_board(B),
+    initial_state(B),
     getPiece(1, 1, B, 0),
     setPiece(1, 1, B, 5, NB),
     getPiece(1, 1, NB, 5).
 
 % Visualization test (don't fail)
 test_vis(X, Y, Piece) :-
-    get_initial_board(B),
+    initial_state(B),
     visualize_moves(X, Y, Piece, B, 0, _).
 
 % =========================================================================
@@ -24,13 +24,13 @@ test_vis(X, Y, Piece) :-
 % =========================================================================
 
 test_validPieces :-
-    get_initial_board(Board),
+    initial_state(Board),
     validPieces(Board, 0, Pieces),
     sort(Pieces, [4-9-3, 5-9-2, 5-10-1, 6-9-2, 6-10-1, 7-9-3]).
 
 test_2 :-
     board_stuck_bug(B),
-    drawBoard(B),
+    display_game(B),
     validPieces(B, 1, P),
     write(P).
 
@@ -43,7 +43,7 @@ getRandomMove(Board, Player, X-Y-Piece, XF-YF) :-
     random_member(XF-YF, ValidMoves).
 
 test_random_bot :-
-    get_initial_board(Board),
+    initial_state(Board),
     getRandomPiece(Board, 1, X-Y-Piece),
     getRandomMove(Board, 1, X-Y-Piece, XF-YF),
     write('Piece: '), write(Piece), nl,

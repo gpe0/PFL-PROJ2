@@ -149,13 +149,13 @@ drawRowLoop(Index, [H|T]) :-
     drawRowLoop(I1, T).
 
 /*
-    drawBoard(+Board)
+    display_game(+Board)
 
     Draws a board
 
     +Board : Board to draw
 */
-drawBoard(Board) :- 
+display_game(Board) :- 
     drawHeader,
     drawRowLoop(10, Board),
     drawFooter,

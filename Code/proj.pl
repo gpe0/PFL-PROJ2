@@ -59,10 +59,31 @@ setPiece(X, Y, Board, P, NewBoard) :-
 % MOVEMENT
 % =========================================================================
 
-movePiece(X1, Y1, X2, Y2, Board, NewBoard) :-
-    getPiece(X1, Y1, Board, Piece),
-    setPiece(X1, Y1, Board, 9, TempBoard),
-    setPiece(X2, Y2, TempBoard, Piece, NewBoard).    
+/*
+flatten([], []).
+flatten([XI-YI-Moves|T2], Flat) :-
+    flattenAux(XI-YI, Moves, Flat2),
+    flatten(T2, Flat3),
+    append(Flat2, Flat3, Flat).
+
+flattenAux(_, [], []).
+flattenAux(XI-YI, [XF-YF|T], [XI-YI-XF-YF|T2]) :-
+    flattenAux(XI-YI, T, T2).
+
+valid_moves(Board, Player, Moves) :-
+    findall(X-Y-M, (backtrackGetPiece(X, Y, Board, Piece), playerPiece(Piece, Player), getMoves(X, Y, Piece, Board, Player, M)), MovesAux),
+    flatten(MovesAux, Moves).
+
+Test predicate on SICStus:
+
+|: get_initial_board(B), valid_moves(B, 0, Moves).
+|: get_initial_board(B), valid_moves(B, 0, Moves), nth1(1, Moves, M), move(B, M, NB), display_game(NB).
+*/
+
+move(Board, X-Y-XF-YF, NewBoard) :-
+    getPiece(X, Y, Board, Piece),
+    setPiece(X, Y, Board, 9, TempBoard),
+    setPiece(XF, YF, TempBoard, Piece, NewBoard).    
 
 % getMoves(X, Y, Piece, Board, Player, Moves)
 getMoves(X, Y, P, Board, Player, Moves) :-
@@ -85,20 +106,18 @@ expand_up_down(X, Y, Board, Player, P, Moves) :-
     expand(X, Y, 1, 0, Board, Player, P, Right),
     expand(X, Y, 0, 1, Board, Player, P, Top),
     expand(X, Y, 0, -1, Board, Player, P, Down),
-    % Append lists with diff. lists
-    append(Left, T1, M1), T1 = Right,
-    append(M1, T2, M2), T2 = Top,
-    append(M2, T3, Moves), T3 = Down.
+    append(Left, Right, Aux1),
+    append(Aux1, Top, Aux2),
+    append(Aux2, Down, Moves).
 
 expand_diagonal(X, Y, Board, Player, P, Moves) :-
     expand(X, Y, -1, -1, Board, Player, P, DL),
     expand(X, Y, 1, 1, Board, Player, P, TR),
     expand(X, Y, -1, 1, Board, Player, P, TL),
     expand(X, Y, 1, -1, Board, Player, P, DR),
-    % Append lists with diff. lists
-    append(DL, T1, M1), T1 = TR,
-    append(M1, T2, M2), T2 = TL,
-    append(M2, T3, Moves), T3 = DR.
+    append(DL, TR, Aux1),
+    append(Aux1, TL, Aux2),
+    append(Aux2, DR, Moves).
 
 expand(X, Y, StepX, StepY, Board, Player, Piece, Moves) :-
     X1 is X + StepX,
@@ -127,7 +146,7 @@ expand_acc(X, Y, StepX, StepY, Board, Player, Piece, Acc, Result) :-
 visualize_moves(X, Y, Piece, Board, Player, Moves) :-
     getMoves(X, Y, Piece, Board, Player, Moves),
     drawMoves(Board, Moves, NewBoard),
-    drawBoard(NewBoard).
+    display_game(NewBoard).
 
 drawMoves(Board, [], Board).
 drawMoves(Board, [X-Y|T], NewBoard) :-
@@ -159,10 +178,10 @@ generateBoards(Board, Player, [X-Y-Piece|RestPieces], Acc, Boards) :-
 
 generateBoardsAux(_, _, [], Acc, Acc).
 generateBoardsAux(Board, X-Y-Piece, [XF-YF|RestMoves], Acc, Boards) :-
-    movePiece(X, Y, XF, YF, Board, NewBoard),
+    move(Board, X-Y-XF-YF, NewBoard),
     generateBoardsAux(Board, X-Y-Piece, RestMoves, [NewBoard | Acc], Boards).
 
-evaluate(Board, Player, Value) :-
+value_simple(Board, Player, Value) :-
     % Evaluate objectives
     getTargetPieces(Board, TargetPieces),
     getPlayerPoints(TargetPieces, Player, 0, Points),
@@ -177,13 +196,11 @@ evaluate(Board, Player, Value) :-
 evaluateBoards([], _, []).
 evaluateBoards([B|RestBoards], Player, [V-B|RT]) :-
     evaluationType(0),
-    evaluate(B, Player, V),
+    value_simple(B, Player, V),
     evaluateBoards(RestBoards, Player, RT).
-
-evaluateBoards([], _, []).
 evaluateBoards([B|RestBoards], Player, [V-B|RT]) :-
     evaluationType(1),
-    evaluateBigBrain(B, Player, V),
+    value(B, Player, V),
     evaluateBoards(RestBoards, Player, RT).
 
 getBestBoards([V-B|RestBoards], V, [B|T]) :-
@@ -346,7 +363,7 @@ parseEvaluationType(_, _) :-
 
 displayWinnerMessage(Winner) :-
     board(FinalBoard),
-    drawBoard(FinalBoard),
+    display_game(FinalBoard),
     % To change
     write('============================'), nl,
     format('=        PLAYER ~d          =', [Winner]), nl,
@@ -373,39 +390,39 @@ turn_action(Board, Player, PiecesToMove) :-
 % If Player is Random
 turn_action(Board, Player, PiecesToMove) :-
     playerType(Player, 1),
-    turn_random(Board, Player, PiecesToMove).
+    choose_move(Board, Player, 1, PiecesToMove).
 
 % If Player is Greedy
 turn_action(Board, Player, PiecesToMove) :-
     playerType(Player, 2),
-    turn_greedy(Board, Player, PiecesToMove).
+    choose_move(Board, Player, 2, PiecesToMove).
 
 % If Player is Greedy (MinMax)
 turn_action(Board, Player, PiecesToMove) :-
     playerType(Player, 3),
-    turn_greedy_minmax(Board, Player, PiecesToMove).
+    choose_move(Board, Player, 3, PiecesToMove).
 
 % Handle Human Turn
 turn_human(Board, Player, PiecesToMove) :-
     readPosition(X, Y, Piece, Board, Player, PiecesToMove),
     visualize_moves(X, Y, Piece, Board, Player, Moves),
     readDestination(XF, YF, Moves, Player),
-    movePiece(X, Y, XF, YF, Board, NewBoard),
+    move(Board, X-Y-XF-YF, NewBoard),
     !,
     setBoard(NewBoard).
 
 % Handle Random Turn
-turn_random(Board, Player, PiecesToMove) :-
+choose_move(Board, Player, 1, PiecesToMove) :-
     random_member(X-Y-Piece, PiecesToMove),
     getMoves(X, Y, Piece, Board, Player, ValidMoves),
     random_member(XF-YF, ValidMoves),
-    movePiece(X, Y, XF, YF, Board, NewBoard),
+    move(Board, X-Y-XF-YF, NewBoard),
     !,
     setBoard(NewBoard).
 
 % Handle Greedy Turn
-turn_greedy(Board, Player, Pieces) :-
-    generateBoards(Board, Player, Pieces, [], NewBoards),
+choose_move(Board, Player, 2, PiecesToMove) :-
+    generateBoards(Board, Player, PiecesToMove, [], NewBoards),
     evaluateBoards(NewBoards, Player, BoardsEvaluated),
     sort(BoardsEvaluated, SortedBoards),
     nth1(1, SortedBoards, V-_),
@@ -415,10 +432,10 @@ turn_greedy(Board, Player, Pieces) :-
     setBoard(MoveChosen).
 
 % Handle MinMax Turn
-turn_greedy_minmax(Board, Player, Pieces) :-
+choose_move(Board, Player, 3, PiecesToMove) :-
     retractall(moveBoard(_, _)),
     asserta(moveBoard(-100000, [])),
-    maxValue(Board, Player, 0, -100000, 100000, _, Pieces),
+    maxValue(Board, Player, 0, -100000, 100000, _, PiecesToMove),
     moveBoard(_, New),
     setBoard(New),
     retractall(moveBoard(_, _)), !.
@@ -500,13 +517,13 @@ resetPosition(X, Y, Board, Res) :-
     setPiece(X, Y, Board, 0, Res).
 
 startGame :-
-    get_initial_board(InitialBoard),
+    initial_state(InitialBoard),
     setBoard(InitialBoard),
     switchPlayer, % Will set player 0 turn
     !,
     repeat,
     board(B),
-    drawBoard(B),
+    display_game(B),
     playerTurn(Player),
     removeLastPosition(B, Board),
     turn(Board, Player),

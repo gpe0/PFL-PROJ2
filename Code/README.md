@@ -130,7 +130,7 @@ O código relacionado com a visualização do estado do jogo está no ficheiro `
 O predicado principal é:
 
 ```prolog
-drawBoard(Board) :- 
+display_game(Board) :- 
     drawHeader,
     drawRowLoop(10, Board),
     drawFooter,
@@ -319,9 +319,39 @@ turn_human(Board, Player, PiecesToMove) :-
 
 ### Lista de Jogadas Válidas
 
-A obtenção de jogadas válidas corresponde aos seguintes predicados:
+Na nossa implementação o predicado `valid_moves` não faz sentido e não seria utilizado. Nós fizemos a lógica do jogo duma forma que a cada turno os predicados recebem as peças que o jogador é **obrigado** a jogar, e baseado nessas peças é que depois calculamos os movimentos válidos.
 
-TODO: ALTERAR NOMES PARA O QUE ELES QUEREM: valid_moves
+Optamos por essa solução visto que satisfaz facilmente uma regra do jogo que é: um jogador com peças assustadas, é obrigado a jogar uma delas. Além disso permite uma interface generalizada de turnos.
+
+De qualquer forma, implementados o predicado embora não seja usado:
+
+```prolog
+flatten([], []).
+flatten([XI-YI-Moves|T2], Flat) :-
+    flattenAux(XI-YI, Moves, Flat2),
+    flatten(T2, Flat3),
+    append(Flat2, Flat3, Flat).
+
+flattenAux(_, [], []).
+flattenAux(XI-YI, [XF-YF|T], [XI-YI-XF-YF|T2]) :-
+    flattenAux(XI-YI, T, T2).
+
+valid_moves(Board, Player, Moves) :-
+    findall(X-Y-M, (backtrackGetPiece(X, Y, Board, Piece), playerPiece(Piece, Player), getMoves(X, Y, Piece, Board, Player, M)), MovesAux),
+    flatten(MovesAux, Moves).
+```
+
+O resultado do `findall` será uma lista com este aspeto:
+
+[XDaPeça-YDaPeça-[XMov1-YMov1, XMov2-YMov2, XMov3-YMov3], ...]
+
+Para ter um lista limpa de movimentos implementou-se o predicado `flatten` que vai transformar a lista acima para:
+
+[XDaPeça-YDaPeça-XMov1-YMov1, XDaPeça-YDaPeça-XMov2-YMov2, XDaPeça-YDaPeça-XMov3-YMov3, ...]
+
+---
+
+Em relação então ao nosso predicado `getMoves` usado é o seguinte:
 
 ```
 getMoves(X, Y, P, Board, Player, Moves) :-
@@ -412,6 +442,33 @@ expand_acc(X, Y, StepX, StepY, Board, Player, Piece, Acc, Result) :-
 
 ### Final do Jogo
 
+O final do jogo é detetado verificando se algum jogador possui mais de 2 peças nas casas objetivos.
+
+O enunciado pede um game_over/2 que recebe o GameState mas sendo que nós guardamos o estado do jogo dinâmicamente o nosso predicado tem aridade 1.
+
+```prolog
+game_over(Winner) :-
+    board(Board),
+    getTargetPieces(Board, Pieces),
+    gameOverWinner(Pieces, Winner).
+
+% gameOverWinner(P1, P2, P3, P4, Winner)
+gameOverWinner(Pieces, 1) :-
+    getPlayerPoints(Pieces, 0, 0, Points),
+    Points > 2,
+    !.
+gameOverWinner(Pieces, 2) :-
+    getPlayerPoints(Pieces, 1, 0, Points),
+    Points > 2,
+    !.
+gameOverWinner(_,3).
+```
+
+- `game_over` - Vai buscar o tabuleiro dinâmico (Board) e as peças que estão nas casas objetivo (Pieces) e chama o predicado gameOverWinner
+- `gameOverWinner` - Verifica se pelo menos 3 peças pertencem a um jogador
+
+Separou-se em dois predicados `game_over` e `gameOverWinner` para evitar repetir o cálculo de ir buscar as peças nas casas objetivo.
+
 ### Avaliação do Tabuleiro
 
 Existe dois predicados de avaliação do tabuleiro.
@@ -424,32 +481,47 @@ No início de cada jogo é pedido ao utilizador para indicar o tipo de evaluate 
 
 #### Avaliação "Simple"
 
-Esta foi o primeiro **evaluate** que fizemos sendo o mais simples.
+Este foi o primeiro **evaluate** que fizemos sendo o mais simples.
 
 A avaliação tem como principal fator o número de pontos que o Player tem.
 
 Com pontos quer-se dizer com número de casas objetivo dominadas.
 
-Além dos pontos é avaliado o número de peças assutadas que o outro jogador tem.
+Além dos pontos é avaliado o número de peças assutadas que o outro jogador tem, dando mais ênfase nas peças assustadas nos objetivos.
 
 Esta última verificação é essencial, sem ela o bot não tentaria retirar as peças do outro jogador das casas objetivo.
 
 ```prolog
-evaluate(Board, Player, Value) :-
+value_simple(Board, Player, Value) :-
+    % Evaluate objectives
     getTargetPieces(Board, TargetPieces),
     getPlayerPoints(TargetPieces, Player, 0, Points),
+    % Evaluate Pieces
     OtherPlayer is 1 - Player,
     findScaredPieces(Board, OtherPlayer, ScaredOtherPlayer),
+    numScaredOnTarget(ScaredOtherPlayer, 0, ScaredOnTarget),
     length(ScaredOtherPlayer, NumScaredOtherPlayer),
     % Formula
-    Value is -100 * Points - NumScaredOtherPlayer.
+    Value is -100 * Points - 50 * ScaredOnTarget - NumScaredOtherPlayer.
 ```
 
 #### Avaliação "Complex" - Código no ficheiro AI.pl
 
 Esta avaliação continua a ter em consideração o número de pontos do player (apesar de ser calculada de outra forma) e o número de peças do outro player assustadas que é essencial para uma boa jogabilidade.
 
-O que difere esta avaliação é a introdução de outro fator que corresponde a uma avaliação das posições atuais das peças do tabuleiro.
+O que difere nesta avaliação é a introdução de outro fator que corresponde a uma avaliação das posições atuais das peças do tabuleiro.
+
+```prolog
+value(Board, Player, Value) :-
+    getTargetPieces(Board, Goals),
+    getBoardPoints(Board, 1, Player, Goals, 0, Points),
+    OtherPlayer is 1 - Player,
+    findScaredPieces(Board, OtherPlayer, ScaredOtherPlayer),
+    numScaredOnTarget(ScaredOtherPlayer, 0, ScaredOnTarget),
+    length(ScaredOtherPlayer, NumScaredOtherPlayer),
+    % Formula
+    Value is -1 * Points - 5000 * ScaredOnTarget - 25 * NumScaredOtherPlayer.
+```
 
 As posições do tabuleiro serão divididas por zonas para cada peça, onde cada zona equivale a um valor.
 
@@ -509,7 +581,7 @@ Em relação ao computador `Random`:
 
 ```prolog
 % Handle Random Turn
-turn_random(Board, Player, PiecesToMove) :-
+choose_move(Board, Player, 1, PiecesToMove) :-
     random_member(X-Y-Piece, PiecesToMove),
     getMoves(X, Y, Piece, Board, Player, ValidMoves),
     random_member(XF-YF, ValidMoves),
@@ -530,7 +602,7 @@ Em relação ao computador `Greedy`:
 
 ```prolog
 % Handle Greedy Turn
-turn_greedy(Board, Player, Pieces) :-
+choose_move(Board, Player, 2, PiecesToMove) :-
     generateBoards(Board, Player, Pieces, [], NewBoards),
     evaluateBoards(NewBoards, Player, BoardsEvaluated),
     sort(BoardsEvaluated, SortedBoards),
@@ -553,7 +625,7 @@ Em relação ao computador `MiniMax`:
 
 ```prolog
 % Handle MinMax Turn
-turn_greedy_minmax(Board, Player, Pieces) :-
+choose_move(Board, Player, 3, PiecesToMove) :-
     retractall(moveBoard(_, _)),
     asserta(moveBoard(-100000, [])),
     maxValue(Board, Player, 0, -100000, 100000, _, Pieces),
