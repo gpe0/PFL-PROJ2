@@ -337,16 +337,16 @@ readDestination(X, Y, Moves, Player) :-
 
 parsePlayerType(Input, Option) :-
     readNumber(Input, Option),
-    Option > -1,
-    Option < 4.
+    Option > 0,
+    Option < 5.
 parsePlayerType(_, _) :-
     write('error: Invalid input, try again!'), nl,
     fail.
 
 parseEvaluationType(Input, Option) :-
     readNumber(Input, Option),
-    Option > -1,
-    Option < 2.
+    Option > 0,
+    Option < 3.
 parseEvaluationType(_, _) :-
     write('error: Invalid input, try again!'), nl,
     fail.
@@ -462,16 +462,16 @@ displayInitalMessage :-
 displayPlayerTypes(Player) :-
     Aux is Player + 1,
     format('       PLAYER ~d TYPE        ', [Aux]), nl,
-    write('0. Human'), nl,
-    write('1. Random'), nl,
-    write('2. Greedy'), nl,
-    write('3. MinMax'), nl.
+    write('1. Human'), nl,
+    write('2. Random'), nl,
+    write('3. Greedy'), nl,
+    write('4. MinMax'), nl.
 
 displayEvaluationTypes(Player) :-
     Aux is Player + 1,
     format('       PLAYER ~d EVALUATION TYPE        ', [Aux]), nl,
-    write('0. Simple'), nl,
-    write('1. Complex'), nl.
+    write('1. Simple'), nl,
+    write('2. Complex'), nl.
 
 getPlayerType(Player) :-
     getBuffer(Input),
