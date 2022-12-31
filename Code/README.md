@@ -256,7 +256,7 @@ A imagem seguinte permite ver um diagrama com a estrutura high level do algoritm
 
 - Qual a distinção entre o `turn` e o `turnAction`?
 
-O turn é responsável por analisar o board e verificar se o jogador tem peças assutadas e calcula as peças que ele pode jogar no turno. 
+O turn é responsável por analisar o board e verificar se o jogador tem peças assustadas e calcula as peças que ele pode jogar no turno. 
 
 ```prolog
 % Test if player has scared pieces

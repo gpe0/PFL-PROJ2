@@ -257,7 +257,13 @@ getTargetPieces(Board, [P1,P2,P3,P4]) :-
     getPiece(4, 7, Board, P3),
     getPiece(7, 7, Board, P4).
 
+gameOver(99) :-
+    retract(num_turn(50)), !.
+
 gameOver(Winner) :-
+    retract(num_turn(N)),
+    N1 is N + 1,
+    asserta(num_turn(N1)),
     board(Board),
     getTargetPieces(Board, Pieces),
     gameOverWinner(Pieces, Winner).
@@ -352,6 +358,8 @@ parseEvaluationType(_, _) :-
 :- dynamic playerType/2.
 :- dynamic board/1.
 :- dynamic playerTurn/1.
+:- dynamic evaluationType/2.
+:- dynamic num_turn/1.
 
 /**
  * Player Type
@@ -361,10 +369,16 @@ parseEvaluationType(_, _) :-
  * - 3 => MinMax Bot
  */
 
+displayWinnerMessage(99) :-
+    board(FinalBoard),
+    display_game(FinalBoard),
+    write('============================'), nl,
+    write('=          DRAW!           ='), nl,
+    write('============================'), nl.
+
 displayWinnerMessage(Winner) :-
     board(FinalBoard),
     display_game(FinalBoard),
-    % To change
     write('============================'), nl,
     format('=        PLAYER ~d          =', [Winner]), nl,
     write('=          WINS!           ='), nl,
@@ -535,9 +549,16 @@ startGame :-
     turn(Board, Player),
     switchPlayer,
     gameOver(Winner),
-    Winner < 3,
+    isGameOver(Winner),
     displayWinnerMessage(Winner).
+
+isGameOver(1).
+isGameOver(2).
+isGameOver(99).
 
 play :-
     menu,
+    retractall(playerTurn(_)),
+    retractall(num_turn(_)),
+    asserta(num_turn(0)),
     startGame.
