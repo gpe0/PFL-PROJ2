@@ -339,7 +339,22 @@ parsePlayerType(_, _) :-
 ```
 
 
-- Já no jogo, caso o jogador seja um humano, é usado a função **getInput(+Mode, -X, -Y)** tanto para ler a peça que o jogador quer movimentar como o destino da mesma
+- Já no jogo, caso o jogador seja um humano, são usadas as funções **readPosition(-X, -Y, -Piece, +Board, +Player, -PossiblePieces)** e **readDestination(-X, -Y, +Moves, -Player)** para ler a peça que o jogador quer movimentar e o destino da mesma, respetivamente.
+
+```
+readPosition(X, Y, Piece, Board, Player, PossiblePieces) :-
+    getInput(Player, X, Y),
+    getPiece(X, Y, Board, Piece),
+    playerPiece(Piece, Player),
+    member(X-Y-Piece, PossiblePieces).
+
+readDestination(X, Y, Moves, Player) :-
+    Mode is Player + 2,
+    getInput(Mode, X, Y),
+    member(X-Y, Moves).
+```
+
+- Estas funções recorrem à função **getInput(+Mode, -X, -Y)** para validar o *input*
 
 ```
 getInput(Mode, X, Y) :-
@@ -347,7 +362,8 @@ getInput(Mode, X, Y) :-
     getBuffer([Letter|Number]),
     readNumber(Number, YInput),
     letterToIndex(Letter, X),
-    Y is 11 - YInput.
+    boardHeight(Height),
+    Y is Height + 1 - YInput.
 
 getInput(Mode, X, Y) :-
     write('error: Invalid input, try again!'), nl, nl,

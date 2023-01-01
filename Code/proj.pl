@@ -120,9 +120,9 @@ expand(X, Y, StepX, StepY, Board, Player, Piece, Moves) :-
 
 % expand_acc(X, Y, StepX, StepY, Acc, Result)
 expand_acc(0, _, _, _, _, _, _, Acc, Acc).
-expand_acc(11, _, _, _, _, _, _, Acc, Acc).
+expand_acc(Width1, _, _, _, _, _, _, Acc, Acc):- boardWidth(Width), Width1 is Width + 1.
 expand_acc(_, 0, _, _, _, _, _, Acc, Acc).
-expand_acc(_, 11, _, _, _, _, _, Acc, Acc).
+expand_acc(_, Height1, _, _, _, _, _, Acc, Acc):- boardHeight(Height), Height1 is Height + 1.
 expand_acc(X, Y, _, _, Board, _, _, Acc, Acc) :-
     getPiece(X, Y, Board, Piece),
     \+empty(Piece).
@@ -319,7 +319,8 @@ getInput(Mode, X, Y) :-
     getBuffer([Letter|Number]),
     readNumber(Number, YInput),
     letterToIndex(Letter, X),
-    Y is 11 - YInput.
+    boardHeight(Height),
+    Y is Height + 1 - YInput.
 
 getInput(Mode, X, Y) :-
     write('error: Invalid input, try again!'), nl, nl,
@@ -393,7 +394,8 @@ piece_name(P, 'Mouse') :- mouse(P).
 log_pieces([]).
 log_pieces([X-Y-P|T]) :-
     piece_name(P, Name),
-    Y1 is 11 - Y,
+    boardHeight(Height),
+    Y1 is Height + 1 - Y,
     Col is 64 + X,
     write('Position '),
     put_code(Col),
