@@ -3,6 +3,9 @@
 % =========================================================================
 
 statsGame(Winner) :-
+    retractall(playerTurn(_)),
+    retractall(num_turn(_)),
+    asserta(num_turn(0)),
     initial_state(InitialBoard),
     setBoard(InitialBoard),
     switchPlayer,
@@ -26,9 +29,6 @@ loopGame(N, Wins1, Wins2) :-
 
 loopGameAux(0, Acc1, Acc2, Acc1, Acc2).
 loopGameAux(N, Acc1, Acc2, Res1, Res2) :-
-    retractall(playerTurn(_)),
-    retractall(num_turn(_)),
-    asserta(num_turn(0)),
     % write('playing game..'), nl,
     statsGame(Winner),
     handleWinner(Winner, Acc1, Acc2, Aux1, Aux2),
@@ -67,7 +67,7 @@ getStats :-
     write('Number of games: '), write(N), nl,
     write('Greedy Bot wins: '), write(P1), nl,
     write('Random Bot wins: '), write(P2), nl,
-    write('Draws: '), write(D1), nl,
+    write('Draws: '), write(D1), nl, nl,
 
     % ===============================================
 
@@ -84,7 +84,7 @@ getStats :-
     write('Number of games: '), write(N), nl,
     write('Greedy Bot 1 wins: '), write(P3), nl,
     write('Greedy Bot 2 wins: '), write(P4), nl,
-    write('Draws: '), write(D2), nl,
+    write('Draws: '), write(D2), nl, nl,
 
     % ===============================================
 
@@ -100,7 +100,7 @@ getStats :-
     write('Number of games: '), write(N), nl,
     write('Greedy Bot 1 wins: '), write(P5), nl,
     write('Greedy Bot 2 wins: '), write(P6), nl,
-    write('Draws: '), write(D3), nl,
+    write('Draws: '), write(D3), nl, nl,
 
     % ===============================================
 
@@ -116,4 +116,4 @@ getStats :-
     write('Number of games: '), write(N), nl,
     write('Greedy Bot 1 wins: '), write(P7), nl,
     write('Greedy Bot 2 wins: '), write(P8), nl,
-    write('Draws: '), write(D4), nl.
+    write('Draws: '), write(D4), nl, nl.

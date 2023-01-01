@@ -643,6 +643,22 @@ test_evaluate_mouse.
 test_evaluate_lion.
 ```
 
+#### Comparação das avaliações
+
+Foram calculadas estatísticas sobre o jogo, estando o código respetivo presente no ficheiro `stats.pl`.
+
+Para avaliar o desempenho dos dois tipos de avaliação dos tabuleiros, foram jogados 100 jogos entre computador greedy vs computador greedy mas cada um usando uma avaliação diferente.
+
+Segue os resultados:
+
+<div align="center">
+    <img src="./imgs/stats.png">
+</div>
+
+Pode-se concluir que a segunda avaliação (Complex) permite obter um melhor desempenho.
+
+Será descrito melhor as diferentes estatísticas na secção **Cálculo Estatísticas**.
+
 ### Jogada do Computador
 
 Em relação ao computador `Random`:
@@ -707,6 +723,37 @@ choose_move(Board, Player, 3, PiecesToMove) :-
 - `maxValue(Board, Player, 0, -100000, 100000, _, Pieces)` - Corre o algoritmo MiniMax
 - `moveBoard(_, New)` - Lê o tabuleiro resultante do algoritmo
 - `setBoard(New)` - Atualizar o board dinamicamente
+
+## Cálculo Estatísticas
+
+As estatísticas podem ser calculadas no SICStus através do predicado `getStats`.
+
+Exemplo de um output:
+
+<div align="center">
+    <img src="./imgs/stats2.png">
+</div>
+
+Os dois últimos grupos têm o intuito de verificar se algumas das avaliações possui algum bias para um dos players ou se permite obter jogos equilibrados.
+
+O código para realizar os jogos é um loop simples com dois acumuladores correspondentes às vitórias de cada jogador:
+
+```prolog
+loopGame(N, Wins1, Wins2) :-
+    loopGameAux(N, 0, 0, Wins1, Wins2).
+
+loopGameAux(0, Acc1, Acc2, Acc1, Acc2).
+loopGameAux(N, Acc1, Acc2, Res1, Res2) :-
+    % write('playing game..'), nl,
+    statsGame(Winner),
+    handleWinner(Winner, Acc1, Acc2, Aux1, Aux2),
+    N1 is N - 1,
+    loopGameAux(N1, Aux1, Aux2, Res1, Res2).
+
+handleWinner(1, Acc1, Acc2, Res1, Acc2) :- Res1 is Acc1 + 1.
+handleWinner(2, Acc1, Acc2, Acc1, Res2) :- Res2 is Acc2 + 1.
+handleWinner(99, Acc1, Acc2, Acc1, Acc2). % Draw
+```
 
 ## Conclusões
 
