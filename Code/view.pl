@@ -8,6 +8,7 @@ drawLineRecursive(Index) :-
     drawLineRecursive(New).
 
 drawHeader :-
+    nl,
     boardWidth(Width),
     write('       '),
     drawHeaderRecursive(Width),

@@ -386,11 +386,33 @@ displayWinnerMessage(Winner) :-
     write('=          WINS!           ='), nl,
     write('============================'), nl.
 
+piece_name(P, 'Elephant') :- elephant(P).
+piece_name(P, 'Lion') :- lion(P).
+piece_name(P, 'Mouse') :- mouse(P).
+
+log_pieces([]).
+log_pieces([X-Y-P|T]) :-
+    piece_name(P, Name),
+    Y1 is 11 - Y,
+    Col is 64 + X,
+    write('Position '),
+    put_code(Col),
+    format('~d : ~w', [Y1, Name]), nl,
+    log_pieces_to_move(T).
+
+warn_player(Player, Pieces) :-
+    playerType(Player, 0), % Only if is human
+    write('Warning: you have the following pieces scared'), nl,
+    log_pieces(Pieces).
+warn_player(_, _).
+
+
 % Test if player has scared pieces
 % If yes, he needs to play them
 turn(Board, Player) :-
     findScaredPieces(Board, Player, ScaredPieces),
     ScaredPieces  = [_|_],
+    warn_player(Player, ScaredPieces),
     turn_action(Board, Player, ScaredPieces),
     !.
 % Otherwise, play a normal turn
@@ -473,7 +495,7 @@ displayEvaluationTypes(Player) :-
     Aux is Player + 1,
     format('       PLAYER ~d EVALUATION TYPE        ', [Aux]), nl,
     write('1. Simple'), nl,
-    write('2. Complex'), nl.
+    write('2. Complex (Only with default board)'), nl.
 
 getPlayerType(Player) :-
     getBuffer(Input),
@@ -493,6 +515,11 @@ getEvaluationType(Player) :-
     Option1 is Option - 1,
     retractall(evaluationType(Player, _)),
     asserta(evaluationType(Player, Option1)).
+
+readEvaluationType(Player) :-
+    boardPreference(2),
+    retractall(evaluationType(Player, _)),
+    asserta(evaluationType(Player, 0)).
 
 readEvaluationType(Player) :-
     playerType(Player, Type),
@@ -558,8 +585,7 @@ setupEmptyBoard :-
     maplist(=(Row), Board),
     setVictorySquareLoop(Height, Width, Board, NewBoard),
     setDefaultPieces(NewBoard, NewerBoard),
-    setBoard(NewerBoard),
-    display_game(NewerBoard).
+    setBoard(NewerBoard).
 
 setDefaultPieces(Board, NewBoard) :-
     boardHeight(Height),
@@ -618,11 +644,11 @@ readBoardHeight :-
 displayBoardWidth :-
     write('       BOARD DIMENSIONS        '), nl,
     write('Please choose a width for your board'), nl,
-    write('Note that the width must be between 8 and 26'), nl.
+    write('Note that the width must be even between 8 and 26'), nl.
 
 displayBoardHeight :-
     write('Please choose a height for your board'), nl,
-    write('Note that the height must be between 8 and 26'), nl.
+    write('Note that the height must be even between 8 and 26'), nl.
 
 getBoardWidth :-
     getBuffer(Input),
@@ -685,7 +711,6 @@ resetPosition(X, Y, Board, Res) :-
 
 startGame :-
     switchPlayer, % Will set player 0 turn
-    !,
     repeat,
     board(B),
     display_game(B),
