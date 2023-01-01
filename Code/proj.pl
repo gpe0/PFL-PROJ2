@@ -1,5 +1,3 @@
-:- dynamic targetPosition/2.
-
 :- use_module(library(lists)).
 :- use_module(library(random)).
 
@@ -363,6 +361,7 @@ parseEvaluationType(_, _) :-
 :- dynamic playerTurn/1.
 :- dynamic evaluationType/2.
 :- dynamic num_turn/1.
+:- dynamic targetPosition/2.
 
 /**
  * Player Type

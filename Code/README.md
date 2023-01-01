@@ -54,6 +54,7 @@ board/1
 playerTurn/1
 evaluationType/2
 num_turn/1
+targetPosition/2
 ```
 
 - `playerType(+Player, -Type)`:
@@ -165,6 +166,12 @@ Este problema é muito específico e acontece quando:
 - Não existe nenhum outro movimento de outra peça que permita igualar o valor do tabuleiro
 
 De realçar que os movimentos são de facto os melhores e o algoritmo greedy está a se comportar como devia.
+
+---
+
+- `targetPosition(+X, +Y)`:
+
+Indica as **casas objetivos**
 
 ### Visualização do estado de jogo
 
