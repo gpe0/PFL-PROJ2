@@ -298,21 +298,61 @@ A seguinte posição corresponde a uma jogada VÁLIDA.
 
 ---
 
-Em relação ao input ....
+Em relação ao input:
 
-....
+- De modo a garantir que o *buffer* ficasse vazio, optamos por ler o *buffer* todo para uma lista através da função **getBuffer(-Input)**
 
-....
+```
+getBuffer([]) :- peek_code(10), get_code(10), !.
+getBuffer([H|T]) :-
+    get_code(H),
+    getBuffer(T).
+```
 
-....
+- Tanto no menu como no jogo, é feito o uso de funções robustas para serem resistentes a erros mostrando mensagens de erro quando tal acontece, voltando a ler o *input* do utilizador
 
-....
+- Recorremos bastante ao uso da função **readNumber(+Input, -Number)** para ler números
 
-....
+```
+readNumber(L, Res) :- readNumberAux(L, 0, Res).
 
-....
+readNumberAux([], Acc, Acc).
+readNumberAux([C|T], Acc, Res):- 
+    C >= 48,
+    C =< 57,
+    !,
+    Acc1 is 10*Acc + (C - 48),
+    readNumberAux(T, Acc1, Res).
+readNumberAux(_, Acc, Acc).
+```
 
-....
+- Por exemplo, no menu foram usadas as funções **parseBoardDimensions(+Input, -Option)**, **parseBoardPreference(+Input, -Option)**, **parsePlayerType(+Input, -Option)** e **parseEvaluationType(+Input, -Option)**
+
+```
+parsePlayerType(Input, Option) :-
+    readNumber(Input, Option),
+    Option > 0,
+    Option < 5.
+parsePlayerType(_, _) :-
+    write('error: Invalid input, try again!'), nl,
+    fail.
+```
+
+
+- Já no jogo, caso o jogador seja um humano, é usado a função **getInput(+Mode, -X, -Y)** tanto para ler a peça que o jogador quer movimentar como o destino da mesma
+
+```
+getInput(Mode, X, Y) :-
+    writeStatus(Mode),
+    getBuffer([Letter|Number]),
+    readNumber(Number, YInput),
+    letterToIndex(Letter, X),
+    Y is 11 - YInput.
+
+getInput(Mode, X, Y) :-
+    write('error: Invalid input, try again!'), nl, nl,
+    getInput(Mode, X, Y).
+```
 
 ### Execução de Jogadas
 
