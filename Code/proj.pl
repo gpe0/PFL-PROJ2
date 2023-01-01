@@ -179,7 +179,7 @@ value_simple(Board, Player, Value) :-
     % Evaluate objectives
     getTargetPieces(Board, TargetPieces),
     getPlayerPoints(TargetPieces, Player, 0, Points),
-    % Evaluate Pieces
+    % Evaluate Other Player Pieces
     OtherPlayer is 1 - Player,
     findScaredPieces(Board, OtherPlayer, ScaredOtherPlayer),
     numScaredOnTarget(ScaredOtherPlayer, 0, ScaredOnTarget),
@@ -258,7 +258,7 @@ getTargetPieces(Board, [P1,P2,P3,P4]) :-
     getPiece(X2, Y2, Board, P4).
 
 gameOver(99) :-
-    retract(num_turn(50)), !.
+    retract(num_turn(100)), !.
 
 gameOver(Winner) :-
     retract(num_turn(N)),
@@ -495,7 +495,7 @@ displayEvaluationTypes(Player) :-
     Aux is Player + 1,
     format('       PLAYER ~d EVALUATION TYPE        ', [Aux]), nl,
     write('1. Simple'), nl,
-    write('2. Complex (Only with default board)'), nl.
+    write('2. Complex'), nl.
 
 getPlayerType(Player) :-
     getBuffer(Input),

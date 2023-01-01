@@ -29,7 +29,7 @@ loopGameAux(N, Acc1, Acc2, Res1, Res2) :-
     retractall(playerTurn(_)),
     retractall(num_turn(_)),
     asserta(num_turn(0)),
-    write('playing game..'), nl,
+    % write('playing game..'), nl,
     statsGame(Winner),
     handleWinner(Winner, Acc1, Acc2, Aux1, Aux2),
     N1 is N - 1,
@@ -44,6 +44,10 @@ handleWinner(99, Acc1, Acc2, Acc1, Acc2). % Draw
 % =========================================================================
 
 getStats :-
+    retractall(boardPreference(_)),
+    asserta(boardPreference(1)),
+    setupCustomBoard,
+
     write('============================'), nl,
     write('=          STATS           ='), nl,
     write('============================'), nl,
@@ -57,11 +61,13 @@ getStats :-
     retractall(playerType(_,_)),
     asserta(playerType(0, 2)), asserta(playerType(1, 1)),
     loopGame(N, P1, P2),
+    D1 is N - P1 - P2,
 
     write('Greedy Bot vs Random Bot'), nl,
     write('Number of games: '), write(N), nl,
     write('Greedy Bot wins: '), write(P1), nl,
     write('Random Bot wins: '), write(P2), nl,
+    write('Draws: '), write(D1), nl,
 
     % ===============================================
 
@@ -72,11 +78,13 @@ getStats :-
     retractall(playerType(_,_)),
     asserta(playerType(0, 2)), asserta(playerType(1, 2)),
     loopGame(N, P3, P4),
+    D2 is N - P3 - P4,
 
     write('Greedy Bot Evaluation Simple vs Greedy Bot Evaluation Complex'), nl,
     write('Number of games: '), write(N), nl,
     write('Greedy Bot 1 wins: '), write(P3), nl,
     write('Greedy Bot 2 wins: '), write(P4), nl,
+    write('Draws: '), write(D2), nl,
 
     % ===============================================
 
@@ -85,12 +93,14 @@ getStats :-
     asserta(evaluationType(1, 0)),
 
     loopGame(N, P5, P6),
+    D3 is N - P5 - P6,
 
     write('Greedy Bot vs Greedy Bot'), nl,
     write('-> Both using evaluation simple'), nl,
     write('Number of games: '), write(N), nl,
     write('Greedy Bot 1 wins: '), write(P5), nl,
     write('Greedy Bot 2 wins: '), write(P6), nl,
+    write('Draws: '), write(D3), nl,
 
     % ===============================================
 
@@ -99,9 +109,11 @@ getStats :-
     asserta(evaluationType(1, 1)),
 
     loopGame(N, P7, P8),
+    D4 is N - P7 - P8,
 
     write('Greedy Bot vs Greedy Bot'), nl,
     write('-> Both using evaluation complex'), nl,
     write('Number of games: '), write(N), nl,
     write('Greedy Bot 1 wins: '), write(P7), nl,
-    write('Greedy Bot 2 wins: '), write(P8), nl.    
+    write('Greedy Bot 2 wins: '), write(P8), nl,
+    write('Draws: '), write(D4), nl.
