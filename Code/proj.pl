@@ -510,6 +510,8 @@ readPlayerType(Player) :-
     getPlayerType(Player).
 
 getEvaluationType(Player) :-
+    boardHeight(10),
+    boardWidth(10),
     getBuffer(Input),
     parseEvaluationType(Input, Option),
     Option1 is Option - 1,
@@ -573,6 +575,8 @@ setupCustomBoard :-
 
 setupCustomBoard :-
     boardPreference(2),
+    retractall(evaluationType(Player, _)),
+    asserta(evaluationType(Player, 0)),
     readBoardDimensions,
     setupEmptyBoard.
 
