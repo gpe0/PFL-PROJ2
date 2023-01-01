@@ -322,6 +322,7 @@ getInput(Mode, X, Y) :-
     readNumber(Number, YInput),
     letterToIndex(Letter, X),
     Y is 11 - YInput.
+
 getInput(Mode, X, Y) :-
     write('error: Invalid input, try again!'), nl, nl,
     getInput(Mode, X, Y).
@@ -518,8 +519,8 @@ readBoardPreference :-
 
 displayBoardPreferences :-
     write('       BOARD PREFERENCE        '), nl,
-    write('0. Default'), nl,
-    write('1. Custom'), nl,
+    write('1. Default'), nl,
+    write('2. Custom'), nl,
     write('Note that selecting this option will prevent you from using complex evaluation'), nl.
 
 getBoardPreference :-
@@ -530,11 +531,14 @@ getBoardPreference :-
 
 parseBoardPreference(Input, Option) :-
     readNumber(Input, Option),
-    Option > -1,
-    Option < 2.
+    Option > 0,
+    Option < 3.
+parseBoardPreference(_, _) :-
+    write('error: Invalid input, try again!'), nl,
+    fail.
 
 setupCustomBoard :-
-    boardPreference(0),
+    boardPreference(1),
     retractall(boardHeight(_)),
     asserta(boardHeight(10)),
     retractall(boardWidth(_)),
@@ -542,7 +546,7 @@ setupCustomBoard :-
     setupEmptyBoard.
 
 setupCustomBoard :-
-    boardPreference(1),
+    boardPreference(2),
     readBoardDimensions,
     setupEmptyBoard.
 
@@ -615,11 +619,11 @@ readBoardHeight :-
 displayBoardWidth :-
     write('       BOARD DIMENSIONS        '), nl,
     write('Please choose a width for your board'), nl,
-    write('Note that the width must be between 6 and 26'), nl.
+    write('Note that the width must be between 8 and 26'), nl.
 
 displayBoardHeight :-
     write('Please choose a height for your board'), nl,
-    write('Note that the height must be between 6 and 26'), nl.
+    write('Note that the height must be between 8 and 26'), nl.
 
 getBoardWidth :-
     getBuffer(Input),
@@ -636,8 +640,11 @@ getBoardHeight :-
 parseBoardDimensions(Input, Option) :-
     readNumber(Input, Option),
     even(Option),
-    Option > 5,
+    Option > 7,
     Option < 27.
+parseBoardDimensions(_, _) :-
+    write('error: Invalid input, try again!'), nl,
+    fail.
 
 menu :-
     displayInitalMessage,
