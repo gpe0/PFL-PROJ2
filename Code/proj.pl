@@ -539,7 +539,115 @@ even(N):- mod(N,2) =:= 0.
 %BoardSetup
 setupBoard :-
     readBoardPreference,
-    setupCustomBoard.
+    setupCustomBoard,
+    readTargetPreference,
+    setupTargetPositions.
+
+readTargetPreference :-
+    boardPreference(1),
+    retractall(targetDistance(_)),
+    asserta(targetDistance(1)).
+
+readTargetPreference :-
+    boardPreference(2),
+    repeat,
+    displayTargetPreferences,
+    getTargetPreference.
+
+displayTargetPreferences :-
+    write('       TARGET POSITION PREFERENCE        '), nl,
+    write('1. Default'), nl,
+    write('2. Custom'), nl.
+
+getTargetPreference :-
+    getBuffer(Input),
+    parseTargetPreference(Input, Option),
+    retractall(targetDistance(_)),
+    asserta(targetDistance(Option)).
+
+parseTargetPreference(Input, Option) :-
+    readNumber(Input, Option),
+    Option > 0,
+    Option < 3.
+parseTargetPreference(_, _) :-
+    write('error: Invalid input, try again!'), nl,
+    fail.
+
+setupTargetPositions :-
+    boardPreference(1),
+    fillBoard.
+
+setupTargetPositions :-
+    targetDistance(1),
+    fillBoard.
+
+setupTargetPositions :-
+    getTargetDistanceFromDimensions(Distance),
+    readTargetDistance(Distance),
+    fillBoard.
+
+fillBoard :-
+    board(Board),
+    boardWidth(Width),
+    boardHeight(Height),
+    targetDistance(Distance),    
+    setTargetPositionLoop(Distance, Height, Width, Board, NewBoard),
+    setDefaultPieces(NewBoard, NewerBoard),
+    setBoard(NewerBoard).
+
+setTargetPositionLoop(Distance, Height, Width, Board, NewBoard) :-
+    X is div(Width, 2) - Distance,
+    Y is div(Height, 2) - Distance,
+    retractall(targetPosition(_,_)),
+    setTargetPosition(X,Y, Board, TempBoard1),
+    X1 is X + 1 + 2 * Distance,
+    setTargetPosition(X1,Y, TempBoard1, TempBoard2),
+    Y1 is Y + 1 + 2 * Distance,
+    setTargetPosition(X,Y1, TempBoard2, TempBoard3),
+    setTargetPosition(X1,Y1, TempBoard3, NewBoard).
+
+setTargetPosition(X, Y, Board, NewBoard) :-
+    nth1(Y, Board, Row, RestBoard),
+    nth1(X, Row, _, RestRow),
+    nth1(X, ModifiedRow, 7, RestRow),
+    nth1(Y, NewBoard, ModifiedRow, RestBoard),
+    asserta(targetPosition(X, Y)).
+
+getTargetDistanceFromDimensions(Distance) :-
+    boardHeight(Height),
+    boardWidth(Width),
+    Width < Height,
+    Distance is div(Width, 2) - 3.
+
+getTargetDistanceFromDimensions(Distance) :-
+    boardHeight(Height),
+    Distance is div(Height, 2) - 3.
+
+readTargetDistance(Distance) :-
+    repeat,
+    displayTargetDistances(Distance),
+    getTargetDistance(Distance).
+
+displayTargetDistances(Distance) :-
+    write('       TARGET POSITIONS        '), nl,
+    write('Please choose the distance from the target positions to the center (diagonally)'), nl,
+    write('Note that the distance must be between 1 and '),
+    write(Distance), nl.
+
+getTargetDistance(Distance) :-
+    getBuffer(Input),
+    parseTargetDistance(Input, Option, Distance),
+    retractall(targetDistance(_)),
+    asserta(targetDistance(Option)).
+
+parseTargetDistance(Input, Option, Distance) :-
+    readNumber(Input, Option),
+    Option > 0,
+    Option < Distance + 1.
+
+parseTargetDistance(_, _, _) :-
+    write('error: Invalid input, try again!'), nl,
+    fail.
 
 %Dimensions
 readBoardPreference :-
@@ -589,9 +697,7 @@ setupEmptyBoard :-
     maplist(=(0), Row),
     length(Board, Height),
     maplist(=(Row), Board),
-    setVictorySquareLoop(Height, Width, Board, NewBoard),
-    setDefaultPieces(NewBoard, NewerBoard),
-    setBoard(NewerBoard).
+    setBoard(Board).
 
 setDefaultPieces(Board, NewBoard) :-
     boardHeight(Height),
@@ -613,25 +719,6 @@ setDefaultPieces(Board, NewBoard) :-
     setPiece(X2, 2, TempBoard9, 2, TempBoard10),
     setPiece(X3, 2, TempBoard10, 2, TempBoard11),
     setPiece(X4, 2, TempBoard11, 3, NewBoard).
-
-
-setVictorySquareLoop(Height, Width, Board, NewBoard) :-
-    X is div(Width,2) - 1,
-    Y is div(Height, 2) - 1,
-    retractall(targetPosition(_,_)),
-    setVictorySquare(X,Y, Board, TempBoard1),
-    X1 is X + 3,
-    setVictorySquare(X1,Y, TempBoard1, TempBoard2),
-    Y1 is Y + 3,
-    setVictorySquare(X,Y1, TempBoard2, TempBoard3),
-    setVictorySquare(X1,Y1, TempBoard3, NewBoard).
-
-setVictorySquare(X, Y, Board, NewBoard) :-
-    nth1(Y, Board, Row, RestBoard),
-    nth1(X, Row, _, RestRow),
-    nth1(X, ModifiedRow, 7, RestRow),
-    nth1(Y, NewBoard, ModifiedRow, RestBoard),
-    asserta(targetPosition(X, Y)).
 
 readBoardDimensions :-
     readBoardWidth,
