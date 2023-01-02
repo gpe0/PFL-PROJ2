@@ -50,7 +50,7 @@ loopGame(N, Wins1, Wins2) :-
 */
 loopGameAux(0, Acc1, Acc2, Acc1, Acc2).
 loopGameAux(N, Acc1, Acc2, Res1, Res2) :-
-    % write('playing game..'), nl,
+    write('playing game..'), nl,
     statsGame(Winner),
     handleWinner(Winner, Acc1, Acc2, Aux1, Aux2),
     N1 is N - 1,
@@ -79,6 +79,13 @@ handleWinner(99, Acc1, Acc2, Acc1, Acc2). % Draw
 getStats :-
     retractall(boardPreference(_)),
     asserta(boardPreference(1)),
+
+    retractall(targetPosition(_, _)),
+    asserta(targetPosition(4, 7)),
+    asserta(targetPosition(4, 4)),
+    asserta(targetPosition(7, 4)),
+    asserta(targetPosition(7, 7)),
+
     setupCustomBoard,
 
     write('============================'), nl,
