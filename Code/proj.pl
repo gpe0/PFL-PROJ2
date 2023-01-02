@@ -22,7 +22,11 @@ empty(0).
 empty(7).
 empty(9).
 
-% playerPiece(Piece, Player)
+/*
+    playerPiece(+Piece, +Player)
+
+    Checks if a Piece is from a player
+*/
 playerPiece(1, 0).
 playerPiece(2, 0).
 playerPiece(3, 0).
@@ -34,15 +38,47 @@ playerPiece(6, 1).
 % BOARD
 % =========================================================================
 
+/*
+    backtrackGetPiece(+X, +Y, +Board, -P)
+
+    Gets a piece on a position of the board
+
+    +X : X of position
+    +Y : Y of position
+    +Board : Current Board
+    -P : Piece on the position
+*/
 backtrackGetPiece(X, Y, Board, P) :-
     nth1(Y, Board, Row),
     nth1(X, Row, P).
 
+/*
+    getPiece(+X, +Y, +Board, -P)
+
+    Gets a piece on a position of the board
+    !! This version prevents backtrack !!
+
+    +X : X of position
+    +Y : Y of position
+    +Board : Current Board
+    -P : Piece on the position
+*/
 getPiece(X, Y, Board, P) :-
     nth1(Y, Board, Row),
     nth1(X, Row, P), !.
 getPiece(_, _, _, 99). % Fail prevention (AI)
  
+/*
+    setPiece(+X, +Y, +Board, +P, -NewBoard)
+
+    Modifies a piece on the Board
+
+    +X : X of position
+    +Y : Y of position
+    +Board : Current Board
+    +P : Piece to set
+    -NewBoard : Board modified
+*/
 setPiece(X, Y, Board, P, NewBoard) :-
     nth1(Y, Board, Row, RestBoard),
     nth1(X, Row, _, RestY),
@@ -54,6 +90,10 @@ setPiece(X, Y, Board, P, NewBoard) :-
 % =========================================================================
 
 /*
+Warning:
+Predicate valid_moves asked on project description not used!
+Details in report
+
 flatten([], []).
 flatten([XI-YI-Moves|T2], Flat) :-
     flattenAux(XI-YI, Moves, Flat2),
@@ -74,15 +114,35 @@ Test predicate on SICStus:
 |: get_initial_board(B), valid_moves(B, 0, Moves), nth1(1, Moves, M), move(B, M, NB), display_game(NB).
 */
 
+/*
+    move(+Board, +Move, -NewBoard)
+
+    Performs a piece movement
+
+    +Board : Current Board
+    +Move : Move to perform
+    -NewBoard : Modified Board
+*/
 move(Board, X-Y-XF-YF, NewBoard) :-
     getPiece(X, Y, Board, Piece),
     setPiece(X, Y, Board, 9, TempBoard),
     setPiece(XF, YF, TempBoard, Piece, NewBoard).    
 
-% getMoves(X, Y, Piece, Board, Player, Moves)
+/*
+    getMoves(+X, +Y, +Piece, +Board, +Player, -Moves)
+
+    Calculates the possible movements of a Piece
+
+    +X : X of position
+    +Y : Y of position
+    +Piece : Piece in the position
+    +Board : Current Board
+    +Player : Player of the piece
+    -Moves : Moves calculated
+*/
 getMoves(X, Y, P, Board, Player, Moves) :-
     mouse(P),
-    expand_up_down(X, Y, Board, Player, P, Moves),
+    expand_cross(X, Y, Board, Player, P, Moves),
     !.
 getMoves(X, Y, P, Board, Player, Moves) :-
     lion(P),
@@ -90,12 +150,24 @@ getMoves(X, Y, P, Board, Player, Moves) :-
     !.
 getMoves(X, Y, P, Board, Player, Moves) :-
     elephant(P),
-    expand_up_down(X, Y, Board, Player, P, Moves1),
+    expand_cross(X, Y, Board, Player, P, Moves1),
     expand_diagonal(X, Y, Board, Player, P, Moves2),
     append(Moves1, T, Moves), T = Moves2,
     !.
 
-expand_up_down(X, Y, Board, Player, P, Moves) :-
+/*
+    expand_cross(+X, +Y, +Board, +Player, +P, -Moves)
+
+    Expands the movement of a piece in 
+    Vertical and Horizontal direction
+
+    +X : X of position
+    +Y : Y of position
+    +Board : Current Board
+    +P : Piece in the position
+    -Moves : Moves calculated on that directions
+*/
+expand_cross(X, Y, Board, Player, P, Moves) :-
     expand(X, Y, -1, 0, Board, Player, P, Left),
     expand(X, Y, 1, 0, Board, Player, P, Right),
     expand(X, Y, 0, 1, Board, Player, P, Top),
@@ -104,6 +176,18 @@ expand_up_down(X, Y, Board, Player, P, Moves) :-
     append(Aux1, Top, Aux2),
     append(Aux2, Down, Moves).
 
+/*
+    expand_diagonal(+X, +Y, +Board, +Player, +P, -Moves)
+
+    Expands the movement of a piece in 
+    Vertical and Horizontal direction
+
+    +X : X of position
+    +Y : Y of position
+    +Board : Current Board
+    +P : Piece in the position
+    -Moves : Moves calculated on that directions
+*/
 expand_diagonal(X, Y, Board, Player, P, Moves) :-
     expand(X, Y, -1, -1, Board, Player, P, DL),
     expand(X, Y, 1, 1, Board, Player, P, TR),
@@ -113,12 +197,41 @@ expand_diagonal(X, Y, Board, Player, P, Moves) :-
     append(Aux1, TL, Aux2),
     append(Aux2, DR, Moves).
 
+/*
+    expand(+X, +Y, +StepX, +StepY, +Board, +Player, +Piece, -Moves)
+
+    Expands the movement of a piece in a defined direction (StepX, StepY)
+
+    +X : X of position
+    +Y : Y of position
+    +StepX : X direction
+    +StepY : Y direction
+    +Board : Current Board
+    +Player : Player of the piece
+    +Piece : Piece in the position
+    -Moves : Moves calculated on that directions
+*/
 expand(X, Y, StepX, StepY, Board, Player, Piece, Moves) :-
     X1 is X + StepX,
     Y1 is Y + StepY,
     expand_acc(X1, Y1, StepX, StepY, Board, Player, Piece, [], Moves).
 
-% expand_acc(X, Y, StepX, StepY, Acc, Result)
+/*
+    expand_acc(+X, +Y, +StepX, +StepY, +Board, +Player, +Piece, +Acc, -Result)
+
+    Expands the movement of a piece in a defined direction (StepX, StepY)
+    Version with accumulator
+
+    +X : X of position
+    +Y : Y of position
+    +StepX : X direction
+    +StepY : Y direction
+    +Board : Current Board
+    +Player : Player of the piece
+    +Piece : Piece in the position
+    +Acc : Accumulator of movements
+    -Result : Moves calculated
+*/
 expand_acc(0, _, _, _, _, _, _, Acc, Acc).
 expand_acc(Width1, _, _, _, _, _, _, Acc, Acc):- boardWidth(Width), Width1 is Width + 1.
 expand_acc(_, 0, _, _, _, _, _, Acc, Acc).
@@ -136,12 +249,33 @@ expand_acc(X, Y, StepX, StepY, Board, Player, Piece, Acc, Result) :-
     X1 is X + StepX,
     Y1 is Y + StepY,
     expand_acc(X1, Y1, StepX, StepY, Board, Player, Piece, A1, Result).
-    
+
+/*
+    visualize_moves(+X, +Y, +Piece, +Board, +Player, -Moves)
+
+    Calculates the moves of a Piece and draws them in the board
+
+    +X : X of position
+    +Y : Y of position
+    +Piece : Piece in the position
+    +Board : Current Board
+    +Player : Player of the piece
+    -Moves : Moves calculated
+*/
 visualize_moves(X, Y, Piece, Board, Player, Moves) :-
     getMoves(X, Y, Piece, Board, Player, Moves),
     drawMoves(Board, Moves, NewBoard),
     display_game(NewBoard).
 
+/*
+    drawMoves(Board, Moves, NewBoard).  
+
+    Modifies the board to show the possible movements
+
+    +Board : Current Board
+    +Moves : Possible Moves
+    -NewBoard : Board modified
+*/
 drawMoves(Board, [], Board).
 drawMoves(Board, [X-Y|T], NewBoard) :-
     setPiece(X,Y,Board,8,B1),
@@ -151,30 +285,83 @@ drawMoves(Board, [X-Y|T], NewBoard) :-
 % AI RANDOM BOT
 % =========================================================================
 
+/*
+    validPieces(+Board, +Player, -Pieces)
+
+    Calculates the valid pieces a player can move
+
+    +Board : Current Board
+    +Player : Player to play
+    -Pieces : Pieces calculated
+*/
 validPieces(Board, Player, Pieces) :-
     findall(X-Y-P, validPiecesAux(X, Y, Board, Player, P), Pieces).
 
+/*
+    validPiecesAux(-X, -Y, +Board, +Player, -P)
+
+    Auxiliar predicate to findall
+
+    -X : X of position
+    -Y : Y of position
+    +Board : Current Board
+    +Player : Player to play
+    -P : Valid Piece
+*/
 validPiecesAux(X, Y, Board, Player, P) :-
     backtrackGetPiece(X, Y, Board, P),
     playerPiece(P, Player),
     getMoves(X, Y, P, Board, Player, [_|_]).
 
 % =========================================================================
-% AI BIG BRAIN BOT
+% AI GREEDY BOT
 % =========================================================================
 
+/*
+    generateBoards(+Board, +Player, +ValidPieces, +Acc, -Boards)
+
+    Generate all the possible boards with all possible movements
+
+    +Board : Current Board
+    +Player : Player playing
+    +ValidPieces : Pieces to play
+    +Acc : Acc of boards
+    -Boards : Boards calculated
+*/
 generateBoards(_, _, [], Acc, Acc).
 generateBoards(Board, Player, [X-Y-Piece|RestPieces], Acc, Boards) :-
     getMoves(X, Y, Piece, Board, Player, ValidMoves),
     generateBoardsAux(Board, X-Y-Piece, ValidMoves, [], NewBoards),
-    append(Acc, T1, Aux), T1 = NewBoards,
+    append(Acc, NewBoards, Aux),
     generateBoards(Board, Player, RestPieces, Aux, Boards).
 
+/*
+    generateBoardsAux(Board, X-Y-Piece, Moves, Acc, Boards)
+
+    Auxiliar predicate to generate all the possible boards 
+    with all possible movements **of a certain piece**
+
+    +Board : Current Board
+    +X-Y-Piece : Piece to play
+    +Moves : Moves remaining to play
+    +Acc : Acc of boards
+    -Boards : Boards calculated
+*/
 generateBoardsAux(_, _, [], Acc, Acc).
 generateBoardsAux(Board, X-Y-Piece, [XF-YF|RestMoves], Acc, Boards) :-
     move(Board, X-Y-XF-YF, NewBoard),
     generateBoardsAux(Board, X-Y-Piece, RestMoves, [NewBoard | Acc], Boards).
 
+/*
+    value_simple(+Board, +Player, -Value).
+
+    Evaluates a board (1st version created - Simple)
+    (MAIN EVALUATE ON FILE AI.pl with the predicate name "value")
+
+    +Board : Board to evaluate
+    +Player : Player being evaluated
+    -Value : Value calculated
+*/
 value_simple(Board, Player, Value) :-
     % Evaluate objectives
     getTargetPieces(Board, TargetPieces),
@@ -187,6 +374,15 @@ value_simple(Board, Player, Value) :-
     % Formula
     Value is -100 * Points - 50 * ScaredOnTarget - NumScaredOtherPlayer.
 
+/*
+    evaluateBoards(+Boards, +Player, -BoardsEvaluated).
+
+    Receives a list of boards and evaluates them
+
+    +Boards : Boards to evaluate
+    +Player : Player being evaluated
+    -BoardsEvaluated : Boards evaluated
+*/
 evaluateBoards([], _, []).
 evaluateBoards([B|RestBoards], Player, [V-B|RT]) :-
     evaluationType(Player, 0),
@@ -197,6 +393,16 @@ evaluateBoards([B|RestBoards], Player, [V-B|RT]) :-
     value(B, Player, V),
     evaluateBoards(RestBoards, Player, RT).
 
+/*
+    getBestBoards(+Boards, +BestValue, -Result) :-
+
+    Filters all the boards with the same value (best value)
+    (Used to bot choose a random best move)
+
+    +Boards : Boards calculated before
+    +BestValue : Best value of the boards
+    -Result : All boards with same best value
+*/
 getBestBoards([V-B|RestBoards], V, [B|T]) :-
     getBestBoards(RestBoards, V, T).
 getBestBoards(_, _, []).

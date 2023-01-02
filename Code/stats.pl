@@ -24,9 +24,30 @@ statsGame(Winner) :-
 % LOOP GAMES
 % =========================================================================
 
+/*
+    loopGame(+N, -Wins1, -Wins2)
+
+    Runs N games and unifies Wins1 and Wins2
+    with the corresponding player wins
+
+    +N : Number of games to run
+    -Wins1 : Wins of Player 1
+    -Wins2 : Wins of Player 2
+*/
 loopGame(N, Wins1, Wins2) :-
     loopGameAux(N, 0, 0, Wins1, Wins2).
 
+/*
+    loopGameAux(+N, +Acc1, +Acc2, -Res1, -Res2)
+
+    Auxliar predicate of loopGame with accumulators
+
+    +N : Games left to run
+    +Acc1 : Accumulator of Player 1 Wins
+    +Acc2 : Accumulator of Player 2 Wins
+    -Res1 : Wins of Player 1
+    -Res2 : Wins of Player 2
+*/
 loopGameAux(0, Acc1, Acc2, Acc1, Acc2).
 loopGameAux(N, Acc1, Acc2, Res1, Res2) :-
     % write('playing game..'), nl,
@@ -35,6 +56,17 @@ loopGameAux(N, Acc1, Acc2, Res1, Res2) :-
     N1 is N - 1,
     loopGameAux(N1, Aux1, Aux2, Res1, Res2).
 
+/*
+    handleWinner(+Winner, +Acc1, +Acc2, -Res1, -Res2)
+
+    Handles the end of one game
+
+    +Winner : Winner of the game
+    +Acc1 : Actual wins of player 1
+    +Acc2 : Actual wins of player 2
+    -Res1 : New wins of player 1
+    -Res2 : New wins of player 2
+*/
 handleWinner(1, Acc1, Acc2, Res1, Acc2) :- Res1 is Acc1 + 1.
 handleWinner(2, Acc1, Acc2, Acc1, Res2) :- Res2 is Acc2 + 1.
 handleWinner(99, Acc1, Acc2, Acc1, Acc2). % Draw
@@ -43,6 +75,7 @@ handleWinner(99, Acc1, Acc2, Acc1, Acc2). % Draw
 % PRINT STATS
 % =========================================================================
 
+% Calculates stats of the game
 getStats :-
     retractall(boardPreference(_)),
     asserta(boardPreference(1)),

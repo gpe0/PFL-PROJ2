@@ -2,6 +2,12 @@
 % INITIAL BOARD OF THE GAME
 % =========================================================================
 
+/*
+    Warning:
+    initial_state asked in project description has another name/implementation
+    Details in report
+*/
+
 initial_state(B) :-
     B = [
         [0, 0, 0, 0, 4, 4, 0, 0, 0, 0],

@@ -98,6 +98,11 @@ test_gameOver :-
 % EVALUATE
 % =========================================================================
 
+/*
+    HARDCODED 2ND VERSION OF BOARD DISPLAY
+    WITH THE VALUES OF THE EVALUATE
+*/
+
 ev_draw_value(Value) :-
     Value < 9,
     format('  ~d    |', [Value]).
@@ -162,7 +167,7 @@ ev_get_rows(Y, Piece, [H|T]) :-
 
 ev_get_board(Piece, Res) :-
     ev_get_rows(1, Piece, Res).
-    
+
 test_evaluate_elephant :-
     ev_get_board(1, Board),
     drawHeader,

@@ -480,7 +480,7 @@ Em relação então ao nosso predicado `getMoves` usado é o seguinte:
 ```
 getMoves(X, Y, P, Board, Player, Moves) :-
     mouse(P),
-    expand_up_down(X, Y, Board, Player, P, Moves),
+    expand_cross(X, Y, Board, Player, P, Moves),
     !.
 getMoves(X, Y, P, Board, Player, Moves) :-
     lion(P),
@@ -488,7 +488,7 @@ getMoves(X, Y, P, Board, Player, Moves) :-
     !.
 getMoves(X, Y, P, Board, Player, Moves) :-
     elephant(P),
-    expand_up_down(X, Y, Board, Player, P, Moves1),
+    expand_cross(X, Y, Board, Player, P, Moves1),
     expand_diagonal(X, Y, Board, Player, P, Moves2),
     append(Moves1, Moves2, Moves),
     !.

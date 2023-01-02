@@ -1,4 +1,10 @@
-% Draws the header of the board
+/*
+    drawLineRecursive(+Index)
+
+    Helper function to draw square bounds
+
+    +Index : Column index
+*/
 drawLineRecursive(0) :-
     nl.
 
@@ -7,42 +13,38 @@ drawLineRecursive(Index) :-
     New is Index - 1,
     drawLineRecursive(New).
 
+% Draws the header of the board
 drawHeader :-
     nl,
     boardWidth(Width),
     write('       '),
-    drawHeaderRecursive(Width),
+    drawLetters(Width),
     write('    '),
     drawLineRecursive(Width).
 
-drawHeaderRecursive(0) :-
+/*
+    drawLetters(+Index)
+
+    Draws the letters of the board
+
+    +Index : Column index
+*/
+drawLetters(0) :-
     nl.
 
-drawHeaderRecursive(Index) :-
+drawLetters(Index) :-
     boardWidth(Width),
     Code is 65 + Width - Index,
     put_code(Code),
     write('       '),
     New is Index - 1,
-    drawFooterRecursive(New).
+    drawLetters(New).
 
 % Draws the footer of the board
 drawFooter :-
     boardWidth(Width),
     write('       '),
-    drawFooterRecursive(Width).
-
-drawFooterRecursive(0) :-
-    nl.
-
-drawFooterRecursive(Index) :-
-    boardWidth(Width),
-    Code is 65 + Width - Index,
-    put_code(Code),
-    write('       '),
-    New is Index - 1,
-    drawFooterRecursive(New).
-
+    drawLetters(Width).
 
 /*
 Piece:
