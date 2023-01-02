@@ -1,12 +1,24 @@
 /*
     Calculate the quadrant of a position
 */
+
 firstQuadrant(X, Y) :- Y < 6, X > 5.
 secondQuadrant(X, Y) :- Y < 6, X < 6.
 thirdQuadrant(X, Y) :- Y > 5, X < 6.
 fourthQuadrant(X, Y) :- Y > 5, X > 5.
 
-% evaluatePiece(+Piece, +X, +Y, +Goals, -Points)
+
+/*
+    evaluatePiece(+Piece, +X, +Y, +Goals, -Points)
+
+    Calculates the points for a specific piece in a specific position in the board
+
+    +Piece : Given Piece
+    +X : X of position
+    +Y : Y of position
+    +Goals : List of the Pieces in the targets
+    -Points : Points evaluated
+*/
 
 /*
     If the position is a target the value is determined.
@@ -42,6 +54,17 @@ evaluatePieceAux(Piece, X, Y, _, Value) :-
     getPieceValue(Piece, X, Y, 1, Value).
 
 /*
+    getPieceValue(+Piece, +X, +Y, +Modifier, -Value)
+
+    Calculates the points for a specific piece in a specific position in the board (Aux Function)
+
+    +Piece : Given Piece
+    +X : X of position
+    +Y : Y of position
+    +Modifier : Multiplier
+    -Points : Points evaluated
+*/
+/*
     Redirects the piece value calculation depending
     on the type, also receives the modifier calculated
     by evaluatePieceAux
@@ -61,8 +84,16 @@ getPieceValue(_, _, _, _, 0).
 % Evaluate the position of a ELEPHANT
 % =========================================================================
 
-% evaluateElephant(X, Y, Modifier, Value)
+/*
+    evaluateElephant(+X, +Y, +Modifier, -Value)
 
+    Calculates the points for an elephant piece in a specific position in the board (Aux Function)
+
+    +X : X of position
+    +Y : Y of position
+    +Modifier : Multiplier
+    -Points : Points evaluated
+*/
 /*
     RED ZONE
     - CENTER OF THE BOARD
@@ -101,6 +132,17 @@ evaluateElephant(_, _, Modifier, Value) :- Value is Modifier * 5.
 % =========================================================================
 % Evaluate the position of a MOUSE
 % =========================================================================
+
+/*
+    evaluateMouse(+X, +Y, +Modifier, -Value)
+
+    Calculates the points for a mouse piece in a specific position in the board (Aux Function)
+
+    +X : X of position
+    +Y : Y of position
+    +Modifier : Multiplier
+    -Points : Points evaluated
+*/
 
 /*
     RED ZONE
@@ -142,6 +184,17 @@ evaluateMouse(_, _, Modifier, Value) :- Value is Modifier * 5.
 % =========================================================================
 
 /*
+    evaluateMouse(+X, +Y, +Modifier, -Value)
+
+    Calculates the points for a lion piece in a specific position in the board (Aux Function)
+
+    +X : X of position
+    +Y : Y of position
+    +Modifier : Multiplier
+    -Points : Points evaluated
+*/
+
+/*
     RED ZONE
     - CAN MOVE TO TARGET
 */
@@ -167,6 +220,15 @@ evaluateLion(X, Y, Modifier, Value) :-
 */
 evaluateLion(_, _, Modifier, Value) :- Value is Modifier * 5.
 
+/*
+    numScaredOnTarget(+Pieces, +Accumulator, -Result)
+
+    Calculates the number of scared pieces on the targets
+
+    +Pieces : List of X-Y-Piece of every piece in the targets
+    +Accumulator : Accumulator
+    -Result : Number of scared pieces
+*/
 numScaredOnTarget([], Acc, Acc).
 numScaredOnTarget([X-Y-_|Rest], Acc, Res) :-
     targetPosition(X, Y),
@@ -174,6 +236,15 @@ numScaredOnTarget([X-Y-_|Rest], Acc, Res) :-
     numScaredOnTarget(Rest, Acc1, Res).
 numScaredOnTarget([_|Rest], Acc, Res) :- numScaredOnTarget(Rest, Acc, Res).
 
+/*
+    value(+Board, +Player, -Value)
+
+    Evaluates the points for a specific board (square patterns evaluation)
+
+    +Board : Game board
+    +Player : Player to be evaluated
+    -Value : Points
+*/
 value(Board, Player, Value) :-
     getTargetPieces(Board, Goals),
     getBoardPoints(Board, 1, Player, Goals, 0, Points),
@@ -184,6 +255,17 @@ value(Board, Player, Value) :-
     % Formula
     Value is -1 * Points - 5000 * ScaredOnTarget - 25 * NumScaredOtherPlayer.
 
+/*
+    getBoardPoints(+Row, +Y, +Player, +Accumulator, -Value)
+
+    Gets the points for a specific row in the board
+
+    +Row : Board row
+    +Y : Current Y position
+    +Player : Player
+    +Accumulator : Accumulator
+    -Value : Points
+*/
 getBoardPoints([], _, _, _, Acc, Acc).
 getBoardPoints([Row|Rest], Y, Player, Goals, Acc, Points) :-
     getRowPoints(Row, 1, Y, Player, Goals, 0, RowPoints),
@@ -202,7 +284,15 @@ getRowPoints([_|Rest], X, Y, Player, Goals, Acc, Points) :-
     X1 is X + 1,
     getRowPoints(Rest, X1, Y, Player, Goals, Acc, Points).
 
+/*
+    evaluateValue(+Board, +Player, -Value)
 
+    Chooses the evaluation method based on user input
+
+    +Board : Game board
+    +Player : Player to be evaluated
+    -Value : Points
+*/
 evaluateValue(Board, Player, Value) :-
     evaluationType(Player, 0),
     value_simple(Board, Player, V),
@@ -213,6 +303,16 @@ evaluateValue(Board, Player, Value) :-
     value(Board, Player, V),
     Value is V * -1, !.
 
+
+/*
+    getPiecesToPlay(+Board, +Player, -Pieces)
+
+    Calculates the pieces that a player can play
+
+    +Board : Game board
+    +Player : Player
+    -Pieces : Pieces able to play
+*/
 % Test if player has scared pieces
 % If yes, he needs to play them
 getPiecesToPlay(Board, Player, ScaredPieces) :-
@@ -223,6 +323,19 @@ getPiecesToPlay(Board, Player, ScaredPieces) :-
 getPiecesToPlay(Board, Player, Pieces) :-
     validPieces(Board, Player, Pieces).
 
+/*
+    maxValue(+Board, +Player, +Depth, +A, +B, +Pieces, -Value)
+
+    Calculates the best move based on a board for a specific player, given a specific depth
+
+    +Board : Game board
+    +Player : Player to be evaluated
+    +Depth : Current depth of the computation
+    +A : Alpha Value
+    +B : Beta Value
+    +Pieces : Pieces that make a move
+    -Value : Points
+*/
 maxValue(Board, Player, Depth, A, B, Pieces, Value) :-
     Depth1 is Depth + 1,
     generateBoards(Board, Player, Pieces, [], NextBoards),
@@ -230,7 +343,19 @@ maxValue(Board, Player, Depth, A, B, Pieces, Value) :-
     V = -100000,
     maxValueAux(ShuffledBoards, Player, Depth1, A, B, V, Value), !.
 
+/*
+    minValue(+Board, +Player, +Depth, +A, +B, +Pieces, -Value)
 
+    Calculates the best move based on a board for a specific player, given a specific depth
+
+    +Board : Game board
+    +Player : Player to be evaluated
+    +Depth : Current depth of the computation
+    +A : Alpha Value
+    +B : Beta Value
+    +Pieces : Pieces that make a move
+    -Value : Points
+*/
 minValue(Board, Player, Depth, A, B, Value) :-
     Depth1 is Depth + 1,
     getPiecesToPlay(Board, Player, Pieces),
@@ -239,7 +364,19 @@ minValue(Board, Player, Depth, A, B, Value) :-
     minValueAux(NextBoards, Player, Depth1, A, B, V, Value),
     updateMoveBoard(Value, Board), !.
 
+/*
+    maxValueAux(+Board, +Player, +Depth, +A, +B, +CurrentValue, -BestValue)
 
+    Calculates the best move based on a board for a specific player, given a specific depth (Aux function)
+
+    +Board : Game board
+    +Player : Player to be evaluated
+    +Depth : Current depth of the computation
+    +A : Alpha Value
+    +B : Beta Value
+    +CurrentValue : Best value obtained so far
+    -BestValue : Best possible Points
+*/
 maxValueAux([], _, _, _, _, Value, Value):- !.
 
 maxValueAux([Board|Rest], Player, 3, A, B, CurrentValue, NewValue) :-
@@ -279,6 +416,19 @@ maxValueAux([Board|_], Player, 3, _, B,  CurrentValue, BestValue):-
     max(CurrentValue, V1, BestValue),
     V1 >= B, !.
 
+/*
+    minValueAux(+Board, +Player, +Depth, +A, +B, +CurrentValue, -BestValue)
+
+    Calculates the best move based on a board for a specific player, given a specific depth (Aux function)
+
+    +Board : Game board
+    +Player : Player to be evaluated
+    +Depth : Current depth of the computation
+    +A : Alpha Value
+    +B : Beta Value
+    +CurrentValue : Best value obtained so far
+    -BestValue : Best possible Points
+*/
 minValueAux([], _, _, _, _, Value, Value):- !.
 
 minValueAux([Board|Rest], Player, Depth, A, B, CurrentValue, NewValue) :-
@@ -298,11 +448,26 @@ minValueAux([Board|_], Player, Depth, A, B, CurrentValue, BestValue):-
     V1 =< A, !.
 
 
-%minMaxBoard(Value, Board)
+/*
+    forceUpdateBoard(+NewValue, +Board)
+
+    Forces a board update
+
+    +NewValue : Board value
+    +Board : Game board
+*/
 forceUpdateBoard(V1, Board) :-
     retractall(moveBoard(_, _)),
     asserta(moveBoard(V1, Board)), !.
 
+/*
+    updateMoveBoard(+NewValue, +Board)
+
+    Tries to update a board
+
+    +NewValue : Board value
+    +Board : Game board
+*/
 updateMoveBoard(V1, Board) :-
     moveBoard(V2, _),
     V2 < V1,
@@ -311,19 +476,26 @@ updateMoveBoard(V1, Board) :-
 
 updateMoveBoard(_, _).
 
+/*
+    max(+Value1, +Value2, -Value3)
 
+    Finds the max number between two numbers
+
+    +Value1 : Value 1
+    +Value2 : Value 2
+    -Value3 : Max Value
+*/
 max(A, B, A) :- A >= B, !.
 max(A, B, B) :- B > A, !.
 
+/*
+    min(+Value1, +Value2, -Value3)
+
+    Finds the min number between two numbers
+
+    +Value1 : Value 1
+    +Value2 : Value 2
+    -Value3 : Min Value
+*/
 min(A, B, A) :- A =< B, !.
 min(A, B, B) :- B < A, !.
-
-
-test111(X) :- 
-    retractall(moveBoard(_)),
-    asserta(moveBoard(-100000, [])),
-    initial_state(B),
-    getPiecesToPlay(B, 0, Pieces),
-    maxValue(B, 0, 0, -100000, 100000, Pieces, X),
-    moveBoard(_, New),
-    display_game(New).

@@ -411,17 +411,48 @@ getBestBoards(_, _, []).
 % FEAR MECHANIC
 % =========================================================================
 
+% Defines what pieces are scared of other pieces
 scared(P1, P2) :- lion(P1), elephant(P2).
 scared(P1, P2) :- elephant(P1), mouse(P2).
 scared(P1, P2) :- mouse(P1), lion(P2).
 
+/*
+    findScaredPieces(+Board, +Player, -Pieces)
+
+    Find the scared pieces, given a player
+
+    +Board : Board Game
+    +Player : Player
+    -Pieces : Scared Pieces
+*/
 findScaredPieces(Board, Player, Pieces) :-
     findall(X-Y-P, findScaredPiecesAux(X, Y, Board, Player, P), Pieces).
 
+/*
+    findScaredPiecesAux(+X, +Y, +Board, +Player, -Pieces)
+
+    Find the scared pieces, given a player (Aux function)
+    
+    +X : X Position
+    +Y : Y Position
+    +Board : Board Game
+    +Player : Player
+    -Pieces : Scared Pieces
+*/
 findScaredPiecesAux(X, Y, Board, Player, P) :-
     validPiecesAux(X, Y, Board, Player, P),
     isScared(X, Y, Board, Player, P).
 
+/*
+    adjacent(+X, +Y, -X1, -Y1)
+
+    Find the adjacent squares
+
+    +X : X Position
+    +Y : Y Position
+    -X1 : X Adjacent Position
+    -Y1 : Y Adjacent Position
+*/
 adjacent(X, Y, X1, Y) :- X1 is X + 1.
 adjacent(X, Y, X1, Y) :- X1 is X - 1.
 adjacent(X, Y, X1, Y1) :- X1 is X + 1, Y1 is Y + 1.
@@ -431,6 +462,17 @@ adjacent(X, Y, X1, Y1) :- X1 is X - 1, Y1 is Y + 1.
 adjacent(X, Y, X, Y1) :- Y1 is Y + 1.
 adjacent(X, Y, X, Y1) :- Y1 is Y - 1.
 
+/*
+    isScared(+X, +Y, +Board, +Player, +P)
+
+    Checks if a piece is scared
+
+    +X : X Position
+    +Y : Y Position
+    +Board : Board Game
+    +Player : Player
+    -P : Piece
+*/
 isScared(X, Y, Board, Player, P) :-
     OtherPlayer is 1 - Player,
     adjacent(X, Y, X1, Y1),
@@ -442,15 +484,41 @@ isScared(X, Y, Board, Player, P) :-
 % GAME OVER
 % =========================================================================
 
+/*
+    boolToInt(+Function, -Number)
+
+    Converts a boolean to a number
+
+    +Function : Evaluation Function
+    -Number : Number (0 - False ; 1 - True)
+*/
 boolToInt(Pred, 1) :- call(Pred).
 boolToInt(_, 0).
 
+/*
+    getPlayerPoints(+TargetPieces, +Player, +Accumulator, -Points)
+
+    Gets the number of pieces in target positions
+
+    +TargetPieces : Target Pieces
+    +Player : Player
+    +Accumulator : Accumulator
+    -Points : Number of pieces in target positions
+*/
 getPlayerPoints([], _, Acc, Acc).
 getPlayerPoints([H|T], Player, Acc, Points) :-
     boolToInt(playerPiece(H, Player), Point),
     Acc1 is Acc + Point,
     getPlayerPoints(T, Player, Acc1, Points).
 
+/*
+    getTargetPieces(+Board, +TargetPieces)
+
+    Gets the pieces in target positions
+
+    +Board : Board Game
+    +TargetPieces : Target Pieces
+*/
 getTargetPieces(Board, [P1,P2,P3,P4]) :-
     boardWidth(Width),
     boardHeight(Height),
@@ -463,6 +531,13 @@ getTargetPieces(Board, [P1,P2,P3,P4]) :-
     getPiece(X2, Y1, Board, P3),
     getPiece(X2, Y2, Board, P4).
 
+/*
+    gameOver(-Winner)
+
+    Finish the game
+
+    -Winner : Winner
+*/
 gameOver(99) :-
     retract(num_turn(100)), !.
 
@@ -474,7 +549,14 @@ gameOver(Winner) :-
     getTargetPieces(Board, Pieces),
     gameOverWinner(Pieces, Winner).
 
-% gameOverWinner(P1, P2, P3, P4, Winner)
+/*
+    gameOverWinner(+Pieces, -Winner)
+
+    Gives the game winner
+
+    +Pieces : Target Pieces
+    -Winner : Winner
+*/
 gameOverWinner(Pieces, 1) :-
     getPlayerPoints(Pieces, 0, 0, Points),
     Points > 2,
@@ -489,13 +571,37 @@ gameOverWinner(_,3).
 % INPUT
 % =========================================================================
 
+/*
+    getBuffer(-Input)
+
+    Fetches every character from the buffer
+
+    +Input : User Input
+*/
 getBuffer([]) :- peek_code(10), get_code(10), !.
 getBuffer([H|T]) :-
     get_code(H),
     getBuffer(T).
 
+/*
+    readNumber(+Input, -Number)
+
+    Reads a number (user input)
+
+    +Input : User Input
+    -Number : Number
+*/
 readNumber(L, Res) :- readNumberAux(L, 0, Res).
 
+/*
+    readNumberAux(+Input, +Accumulator, -Number)
+
+    Reads a number (Aux function)
+
+    +Input : User Input
+    +Accumulator : Accumulator
+    -Number : Number
+*/
 readNumberAux([], Acc, Acc).
 readNumberAux([C|T], Acc, Res):- 
     C >= 48,
@@ -505,6 +611,14 @@ readNumberAux([C|T], Acc, Res):-
     readNumberAux(T, Acc1, Res).
 readNumberAux(_, Acc, Acc).
 
+/*
+    letterToIndex(+Letter, -X)
+
+    Transforms a letter into a number
+
+    +Letter : Letter
+    -X : Number
+*/
 letterToIndex(Letter, X) :-
     Letter > 64,
     Letter < 75,
@@ -515,11 +629,27 @@ letterToIndex(Letter, X) :-
     Letter < 107,
     X is Letter - 96.
 
+/*
+    writeStatus(+Mode)
+
+    Displays a status message
+
+    +Mode : Display message status
+*/
 writeStatus(0) :- write('[Player 1] Choose the piece to move:').
 writeStatus(1) :- write('[Player 2] Choose the piece to move:').
 writeStatus(2) :- write('[Player 1] Choose the piece destination:').
 writeStatus(3) :- write('[Player 2] Choose the piece destination:').
 
+/*
+    getInput(+Mode, -X, -Y)
+
+    Gets the user input
+
+    +Mode : Display message status
+    -X : X Position
+    -Y : Y Position
+*/
 getInput(Mode, X, Y) :-
     writeStatus(Mode),
     getBuffer([Letter|Number]),
@@ -532,17 +662,47 @@ getInput(Mode, X, Y) :-
     write('error: Invalid input, try again!'), nl, nl,
     getInput(Mode, X, Y).
 
+/*
+    readPosition(-X, -Y, -Piece, +Board, +Player, +PossiblePieces)
+
+    Gets the selected square position and piece
+
+    -X : X Position
+    -Y : Y Position
+    -Piece : Piece in the square
+    +Board : Board Game
+    +Player : Player
+    +PossiblePieces : Possible pieces the player can select
+*/
 readPosition(X, Y, Piece, Board, Player, PossiblePieces) :-
     getInput(Player, X, Y),
     getPiece(X, Y, Board, Piece),
     playerPiece(Piece, Player),
     member(X-Y-Piece, PossiblePieces).
 
+/*
+    readDestination(-X, -Y, +Moves, +Player)
+
+    Gets the destination based on the moved piece
+
+    -X : X Position
+    -Y : Y Position
+    +Moves : Possible moves
+    +Player : Player
+*/
 readDestination(X, Y, Moves, Player) :-
     Mode is Player + 2,
     getInput(Mode, X, Y),
     member(X-Y, Moves).
 
+/*
+    parsePlayerType(+Input, -Option)
+
+    Given input, calculates the player type selected by the user
+
+    +Input : User input
+    -Option : Option selected
+*/
 parsePlayerType(Input, Option) :-
     readNumber(Input, Option),
     Option > 0,
@@ -551,6 +711,14 @@ parsePlayerType(_, _) :-
     write('error: Invalid input, try again!'), nl,
     fail.
 
+/*
+    parseEvaluationType(+Input, -Option)
+
+    Given input, calculates the evaluation type selected by the user
+
+    +Input : User input
+    -Option : Option selected
+*/
 parseEvaluationType(Input, Option) :-
     readNumber(Input, Option),
     Option > 0,
@@ -578,6 +746,13 @@ parseEvaluationType(_, _) :-
  * - 3 => MinMax Bot
  */
 
+/*
+    displayWinnerMessage(+Winner)
+
+   Shows the game winner (or draw)
+
+    +Winner : Winner
+*/
 displayWinnerMessage(99) :-
     board(FinalBoard),
     display_game(FinalBoard),
@@ -593,10 +768,18 @@ displayWinnerMessage(Winner) :-
     write('=          WINS!           ='), nl,
     write('============================'), nl.
 
+% Name the pieces
 piece_name(P, 'Elephant') :- elephant(P).
 piece_name(P, 'Lion') :- lion(P).
 piece_name(P, 'Mouse') :- mouse(P).
 
+/*
+    log_pieces(+Board, +Pieces)
+
+    Warns the player of possible scared pieces
+
+    +Pieces : List of Pieces (X-Y-Piece)
+*/
 log_pieces([]).
 log_pieces([X-Y-P|T]) :-
     piece_name(P, Name),
@@ -608,13 +791,28 @@ log_pieces([X-Y-P|T]) :-
     format('~d : ~w', [Y1, Name]), nl,
     log_pieces_to_move(T).
 
+/*
+    warn_player(+Board, +Pieces)
+
+    Warns the player of possible scared pieces
+
+    +Board : Board Game
+    +Pieces : Pieces
+*/
 warn_player(Player, Pieces) :-
     playerType(Player, 0), % Only if is human
     write('Warning: you have the following pieces scared'), nl,
     log_pieces(Pieces).
 warn_player(_, _).
 
+/*
+    turn(+Board, +Player)
 
+    Generates the movable pieces and makes a game turn
+
+    +Board : Board Game
+    +Player : Player
+*/
 % Test if player has scared pieces
 % If yes, he needs to play them
 turn(Board, Player) :-
@@ -628,6 +826,15 @@ turn(Board, Player) :-
     validPieces(Board, Player, Pieces),
     turn_action(Board, Player, Pieces).
 
+/*
+    turn_action(+Board, +Player, +Pieces)
+
+    makes a game turn based on the player type
+
+    +Board : Board Game
+    +Player : Player
+    +Pieces : Pieces able to move
+*/
 % If Player is Human
 turn_action(Board, Player, PiecesToMove) :-
     playerType(Player, 0),
@@ -648,6 +855,15 @@ turn_action(Board, Player, PiecesToMove) :-
     playerType(Player, 3),
     choose_move(Board, Player, 3, PiecesToMove).
 
+/*
+    turn_human(+Board, +Player, +Pieces)
+
+    Gets the user input to move a piece in the board
+
+    +Board : Board Game
+    +Player : Player
+    +Pieces : Pieces able to move
+*/
 % Handle Human Turn
 turn_human(Board, Player, PiecesToMove) :-
     readPosition(X, Y, Piece, Board, Player, PiecesToMove),
@@ -657,6 +873,16 @@ turn_human(Board, Player, PiecesToMove) :-
     !,
     setBoard(NewBoard).
 
+/*
+    choose_move(+Board, +Player, +BotType, +Pieces)
+
+    Moves the best piece based on the bot type
+
+    +Board : Board Game
+    +Player : Player
+    +BotType : Bot type (1 - random ; 2 - greedy ; 3 - minmax)
+    +Pieces : Pieces able to move
+*/
 % Handle Random Turn
 choose_move(Board, Player, 1, PiecesToMove) :-
     random_member(X-Y-Piece, PiecesToMove),
@@ -686,11 +912,19 @@ choose_move(Board, Player, 3, PiecesToMove) :-
     setBoard(New),
     retractall(moveBoard(_, _)), !.
 
+% Menu header
 displayInitalMessage :-
     write('===== Barca Board Game ====='), nl,
     write('          PFL 22/23         '), nl,
     write('============================'), nl, nl.
 
+/*
+    displayPlayerTypes(+Player)
+
+    Displays the player types available
+
+    +Player : Player
+*/
 displayPlayerTypes(Player) :-
     Aux is Player + 1,
     format('       PLAYER ~d TYPE        ', [Aux]), nl,
@@ -699,12 +933,26 @@ displayPlayerTypes(Player) :-
     write('3. Greedy'), nl,
     write('4. MinMax'), nl.
 
+/*
+    displayEvaluationTypes(+Player)
+
+    Displays the evaluation types available
+
+    +Player : Player
+*/
 displayEvaluationTypes(Player) :-
     Aux is Player + 1,
     format('       PLAYER ~d EVALUATION TYPE        ', [Aux]), nl,
     write('1. Simple'), nl,
     write('2. Complex'), nl.
 
+/*
+    getPlayerType(+Player)
+
+    Gets the player type
+
+    +Player : Player
+*/
 getPlayerType(Player) :-
     getBuffer(Input),
     parsePlayerType(Input, Option),
@@ -712,11 +960,25 @@ getPlayerType(Player) :-
     retractall(playerType(Player, _)),
     asserta(playerType(Player, Option1)).
 
+/*
+    readPlayerType(+Player)
+
+    Error proof loop to get the player type
+
+    +Player : Player
+*/
 readPlayerType(Player) :-
     repeat,
     displayPlayerTypes(Player),
     getPlayerType(Player).
 
+/*
+    getEvaluationType(+Player)
+
+    Gets the evaluation type
+
+    +Player : Player
+*/
 getEvaluationType(Player) :-
     boardHeight(10),
     boardWidth(10),
@@ -726,6 +988,13 @@ getEvaluationType(Player) :-
     retractall(evaluationType(Player, _)),
     asserta(evaluationType(Player, Option1)).
 
+/*
+    readEvaluationType(+Player)
+
+    Error proof loop to get the evaluation type
+
+    +Player : Player
+*/
 readEvaluationType(Player) :-
     boardPreference(2),
     retractall(evaluationType(Player, _)),
@@ -740,15 +1009,17 @@ readEvaluationType(Player) :-
 
 readEvaluationType(_).
 
+% Even number definition
 even(N):- mod(N,2) =:= 0.
 
-%BoardSetup
+%Sets up the game board
 setupBoard :-
     readBoardPreference,
     setupCustomBoard,
     readTargetPreference,
     setupTargetPositions.
 
+% Error proof loop to get the target preference
 readTargetPreference :-
     boardPreference(1),
     retractall(targetDistance(_)),
@@ -760,17 +1031,27 @@ readTargetPreference :-
     displayTargetPreferences,
     getTargetPreference.
 
+% Displays the options available to the target preference
 displayTargetPreferences :-
     write('       TARGET POSITION PREFERENCE        '), nl,
     write('1. Default'), nl,
     write('2. Custom'), nl.
 
+%Gets the target preference
 getTargetPreference :-
     getBuffer(Input),
     parseTargetPreference(Input, Option),
     retractall(targetDistance(_)),
     asserta(targetDistance(Option)).
 
+/*
+    parseTargetPreference(+Input, -Option)
+
+    Given input, calculates the target preference selected by the user
+
+    +Input : User input
+    -Option : Option selected
+*/
 parseTargetPreference(Input, Option) :-
     readNumber(Input, Option),
     Option > 0,
@@ -779,6 +1060,7 @@ parseTargetPreference(_, _) :-
     write('error: Invalid input, try again!'), nl,
     fail.
 
+% Sets up the target positions
 setupTargetPositions :-
     boardPreference(1),
     fillBoard.
@@ -792,6 +1074,7 @@ setupTargetPositions :-
     readTargetDistance(Distance),
     fillBoard.
 
+% Fills the board game
 fillBoard :-
     board(Board),
     boardWidth(Width),
@@ -801,6 +1084,17 @@ fillBoard :-
     setDefaultPieces(NewBoard, NewerBoard),
     setBoard(NewerBoard).
 
+/*
+    setTargetPositionLoop(+Distance, +Height, +Width, +Board, -NewBoard)
+
+    sets all the targets in the board
+
+    +Distance : Distance to target
+    +Height : Board's Height
+    +Width : Board's Width
+    +Board : Board Game
+    -NewBoard : Board Game with the new target
+*/
 setTargetPositionLoop(Distance, Height, Width, Board, NewBoard) :-
     X is div(Width, 2) - Distance,
     Y is div(Height, 2) - Distance,
@@ -812,6 +1106,16 @@ setTargetPositionLoop(Distance, Height, Width, Board, NewBoard) :-
     setTargetPosition(X,Y1, TempBoard2, TempBoard3),
     setTargetPosition(X1,Y1, TempBoard3, NewBoard).
 
+/*
+    setTargetPosition(+X, +Y, +Board, -NewBoard)
+
+    sets the target position in a specific position of the board
+
+    +X : X Position
+    +Y : Y Position
+    +Board : Board Game
+    -NewBoard : Board Game with the new target
+*/
 setTargetPosition(X, Y, Board, NewBoard) :-
     nth1(Y, Board, Row, RestBoard),
     nth1(X, Row, _, RestRow),
@@ -819,6 +1123,13 @@ setTargetPosition(X, Y, Board, NewBoard) :-
     nth1(Y, NewBoard, ModifiedRow, RestBoard),
     asserta(targetPosition(X, Y)).
 
+/*
+    readTargetDistance(-Distance)
+
+    Calculates the distance to target having board dimensions
+
+    -Distance : Distance to target
+*/
 getTargetDistanceFromDimensions(Distance) :-
     boardHeight(Height),
     boardWidth(Width),
@@ -829,23 +1140,53 @@ getTargetDistanceFromDimensions(Distance) :-
     boardHeight(Height),
     Distance is div(Height, 2) - 3.
 
+/*
+    readTargetDistance(+Distance)
+
+    Error proof loop to get the target distance
+
+    +Distance : Distance to target
+*/
 readTargetDistance(Distance) :-
     repeat,
     displayTargetDistances(Distance),
     getTargetDistance(Distance).
 
+/*
+    displayTargetDistances(+Distance)
+
+    Display useful information for the distance target selection
+
+    +Distance : Distance to target
+*/
 displayTargetDistances(Distance) :-
     write('       TARGET POSITIONS        '), nl,
     write('Please choose the distance from the target positions to the center (diagonally)'), nl,
     write('Note that the distance must be between 1 and '),
     write(Distance), nl.
 
+/*
+    getTargetDistance(+Distance)
+
+    Gets the target distance
+
+    +Distance : Distance to target
+*/
 getTargetDistance(Distance) :-
     getBuffer(Input),
     parseTargetDistance(Input, Option, Distance),
     retractall(targetDistance(_)),
     asserta(targetDistance(Option)).
 
+/*
+    parseTargetDistance(+Input, -Option, +Distance)
+
+    Given input and a distance, calculates the target distance selected by the user
+
+    +Input : User input
+    -Option : Option selected
+    +Distance : Distance to target
+*/
 parseTargetDistance(Input, Option, Distance) :-
     readNumber(Input, Option),
     Option > 0,
@@ -855,24 +1196,34 @@ parseTargetDistance(_, _, _) :-
     write('error: Invalid input, try again!'), nl,
     fail.
 
-%Dimensions
+% Error proof loop to get the board preference
 readBoardPreference :-
     repeat,
     displayBoardPreferences,
     getBoardPreference.
 
+% Displays the possible board preferences
 displayBoardPreferences :-
     write('       BOARD PREFERENCE        '), nl,
     write('1. Default'), nl,
     write('2. Custom'), nl,
     write('Note that selecting this option will prevent you from using complex evaluation'), nl.
 
+% Gets the board preference (user input)
 getBoardPreference :-
     getBuffer(Input),
     parseBoardPreference(Input, Option),
     retractall(boardPreference(_)),
     asserta(boardPreference(Option)).
 
+/*
+    parseBoardDimensions(+Input, -Option)
+
+    Given input, calculates the board preference selected by the user
+
+    +Input : User input
+    -Option : Option selected
+*/
 parseBoardPreference(Input, Option) :-
     readNumber(Input, Option),
     Option > 0,
@@ -881,6 +1232,7 @@ parseBoardPreference(_, _) :-
     write('error: Invalid input, try again!'), nl,
     fail.
 
+% Sets up the game board
 setupCustomBoard :-
     boardPreference(1),
     retractall(boardHeight(_)),
@@ -889,6 +1241,7 @@ setupCustomBoard :-
     asserta(boardWidth(10)),
     setupEmptyBoard.
 
+
 setupCustomBoard :-
     boardPreference(2),
     retractall(evaluationType(Player, _)),
@@ -896,6 +1249,7 @@ setupCustomBoard :-
     readBoardDimensions,
     setupEmptyBoard.
 
+% Sets up an empty board
 setupEmptyBoard :-
     boardWidth(Width),
     boardHeight(Height),
@@ -905,6 +1259,14 @@ setupEmptyBoard :-
     maplist(=(Row), Board),
     setBoard(Board).
 
+/*
+    setDefaultPieces(+Board, -NewBoard)
+
+    sets the pieces in the default positions (10x10 board)
+
+    +Board : Empty Board
+    -NewBoard : Game Board
+*/
 setDefaultPieces(Board, NewBoard) :-
     boardHeight(Height),
     boardWidth(Width),
@@ -926,10 +1288,12 @@ setDefaultPieces(Board, NewBoard) :-
     setPiece(X3, 2, TempBoard10, 2, TempBoard11),
     setPiece(X4, 2, TempBoard11, 3, NewBoard).
 
+% Gets board dimensions
 readBoardDimensions :-
     readBoardWidth,
     readBoardHeight.
 
+% Error proof loop to get the board dimensions form the user
 readBoardWidth :-
     repeat,
     displayBoardWidth,
@@ -940,6 +1304,7 @@ readBoardHeight :-
     displayBoardHeight,
     getBoardHeight.
 
+% Displays some information to guide the user when choosing board dimensions
 displayBoardWidth :-
     write('       BOARD DIMENSIONS        '), nl,
     write('Please choose a width for your board'), nl,
@@ -949,6 +1314,7 @@ displayBoardHeight :-
     write('Please choose a height for your board'), nl,
     write('Note that the height must be even between 8 and 26'), nl.
 
+% Gets the board dimensions
 getBoardWidth :-
     getBuffer(Input),
     parseBoardDimensions(Input, Option),
@@ -961,6 +1327,14 @@ getBoardHeight :-
     retractall(boardHeight(_)),
     asserta(boardHeight(Option)).
 
+/*
+    parseBoardDimensions(+Input, -Option)
+
+    Given input, calculates the board dimension selected by the user
+
+    +Input : User input
+    -Option : Option selected
+*/
 parseBoardDimensions(Input, Option) :-
     readNumber(Input, Option),
     even(Option),
@@ -970,6 +1344,7 @@ parseBoardDimensions(_, _) :-
     write('error: Invalid input, try again!'), nl,
     fail.
 
+% Menu to the the game settings
 menu :-
     displayInitalMessage,
     setupBoard,
@@ -978,6 +1353,7 @@ menu :-
     readPlayerType(1),
     readEvaluationType(1).
 
+% Player changes turns with the other player
 switchPlayer :-
     playerTurn(0),
     retractall(playerTurn(_)),
@@ -991,16 +1367,43 @@ switchPlayer :-
 switchPlayer :-
     asserta(playerTurn(0)).
 
+/*
+    setBoard(+Board)
+
+    Dynamically sets the board
+
+    +Board : Board Game
+*/
 setBoard(Board) :-
     retractall(board(_)),
     asserta(board(Board)).
 
+/*
+    removeLastPosition(+Board, -Result)
+
+    Resets the origin position after a move
+
+    +X : X Position
+    +Y : Y Position
+    +Board : Board Game
+    -Result : Board Reseted
+*/
 removeLastPosition(Board, Res) :-
     backtrackGetPiece(X, Y, Board, 9),
     !,
     resetPosition(X, Y, Board, Res).
 removeLastPosition(Board, Board).
 
+/*
+    resetPosition(+X, +Y, +Board, -Result)
+
+    Resets the origin position after a move
+
+    +X : X Position
+    +Y : Y Position
+    +Board : Board Game
+    -Result : Board Reseted
+*/
 resetPosition(X, Y, Board, Res) :-
     targetPosition(X, Y),
     setPiece(X, Y, Board, 7, Res),
@@ -1008,6 +1411,7 @@ resetPosition(X, Y, Board, Res) :-
 resetPosition(X, Y, Board, Res) :-
     setPiece(X, Y, Board, 0, Res).
 
+% Game loop
 startGame :-
     switchPlayer, % Will set player 0 turn
     repeat,
@@ -1025,6 +1429,7 @@ isGameOver(1).
 isGameOver(2).
 isGameOver(99).
 
+% Game start point (displays a menu then starts the game)
 play :-
     menu,
     retractall(playerTurn(_)),
