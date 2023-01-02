@@ -298,21 +298,77 @@ A seguinte posição corresponde a uma jogada VÁLIDA.
 
 ---
 
-Em relação ao input ....
+Em relação ao input:
 
-....
+- De modo a garantir que o *buffer* ficasse vazio, optamos por ler o *buffer* todo para uma lista através da função **getBuffer(-Input)**
 
-....
+```
+getBuffer([]) :- peek_code(10), get_code(10), !.
+getBuffer([H|T]) :-
+    get_code(H),
+    getBuffer(T).
+```
 
-....
+- Tanto no menu como no jogo, é feito o uso de funções robustas para serem resistentes a erros mostrando mensagens de erro quando tal acontece, voltando a ler o *input* do utilizador
 
-....
+- Recorremos bastante ao uso da função **readNumber(+Input, -Number)** para ler números
 
-....
+```
+readNumber(L, Res) :- readNumberAux(L, 0, Res).
 
-....
+readNumberAux([], Acc, Acc).
+readNumberAux([C|T], Acc, Res):- 
+    C >= 48,
+    C =< 57,
+    !,
+    Acc1 is 10*Acc + (C - 48),
+    readNumberAux(T, Acc1, Res).
+readNumberAux(_, Acc, Acc).
+```
 
-....
+- Por exemplo, no menu foram usadas as funções **parseBoardDimensions(+Input, -Option)**, **parseBoardPreference(+Input, -Option)**, **parsePlayerType(+Input, -Option)** e **parseEvaluationType(+Input, -Option)**
+
+```
+parsePlayerType(Input, Option) :-
+    readNumber(Input, Option),
+    Option > 0,
+    Option < 5.
+parsePlayerType(_, _) :-
+    write('error: Invalid input, try again!'), nl,
+    fail.
+```
+
+
+- Já no jogo, caso o jogador seja um humano, são usadas as funções **readPosition(-X, -Y, -Piece, +Board, +Player, -PossiblePieces)** e **readDestination(-X, -Y, +Moves, -Player)** para ler a peça que o jogador quer movimentar e o destino da mesma, respetivamente.
+
+```
+readPosition(X, Y, Piece, Board, Player, PossiblePieces) :-
+    getInput(Player, X, Y),
+    getPiece(X, Y, Board, Piece),
+    playerPiece(Piece, Player),
+    member(X-Y-Piece, PossiblePieces).
+
+readDestination(X, Y, Moves, Player) :-
+    Mode is Player + 2,
+    getInput(Mode, X, Y),
+    member(X-Y, Moves).
+```
+
+- Estas funções recorrem à função **getInput(+Mode, -X, -Y)** para validar o *input*
+
+```
+getInput(Mode, X, Y) :-
+    writeStatus(Mode),
+    getBuffer([Letter|Number]),
+    readNumber(Number, YInput),
+    letterToIndex(Letter, X),
+    boardHeight(Height),
+    Y is Height + 1 - YInput.
+
+getInput(Mode, X, Y) :-
+    write('error: Invalid input, try again!'), nl, nl,
+    getInput(Mode, X, Y).
+```
 
 ### Execução de Jogadas
 
@@ -643,6 +699,22 @@ test_evaluate_mouse.
 test_evaluate_lion.
 ```
 
+#### Comparação das avaliações
+
+Foram calculadas estatísticas sobre o jogo, estando o código respetivo presente no ficheiro `stats.pl`.
+
+Para avaliar o desempenho dos dois tipos de avaliação dos tabuleiros, foram jogados 100 jogos entre computador greedy vs computador greedy mas cada um usando uma avaliação diferente.
+
+Segue os resultados:
+
+<div align="center">
+    <img src="./imgs/stats.png">
+</div>
+
+Pode-se concluir que a segunda avaliação (Complex) permite obter um melhor desempenho.
+
+Será descrito melhor as diferentes estatísticas na secção **Cálculo Estatísticas**.
+
 ### Jogada do Computador
 
 Em relação ao computador `Random`:
@@ -707,6 +779,37 @@ choose_move(Board, Player, 3, PiecesToMove) :-
 - `maxValue(Board, Player, 0, -100000, 100000, _, Pieces)` - Corre o algoritmo MiniMax
 - `moveBoard(_, New)` - Lê o tabuleiro resultante do algoritmo
 - `setBoard(New)` - Atualizar o board dinamicamente
+
+## Cálculo Estatísticas
+
+As estatísticas podem ser calculadas no SICStus através do predicado `getStats`.
+
+Exemplo de um output:
+
+<div align="center">
+    <img src="./imgs/stats2.png">
+</div>
+
+Os dois últimos grupos têm o intuito de verificar se algumas das avaliações possui algum bias para um dos players ou se permite obter jogos equilibrados.
+
+O código para realizar os jogos é um loop simples com dois acumuladores correspondentes às vitórias de cada jogador:
+
+```prolog
+loopGame(N, Wins1, Wins2) :-
+    loopGameAux(N, 0, 0, Wins1, Wins2).
+
+loopGameAux(0, Acc1, Acc2, Acc1, Acc2).
+loopGameAux(N, Acc1, Acc2, Res1, Res2) :-
+    % write('playing game..'), nl,
+    statsGame(Winner),
+    handleWinner(Winner, Acc1, Acc2, Aux1, Aux2),
+    N1 is N - 1,
+    loopGameAux(N1, Aux1, Aux2, Res1, Res2).
+
+handleWinner(1, Acc1, Acc2, Res1, Acc2) :- Res1 is Acc1 + 1.
+handleWinner(2, Acc1, Acc2, Acc1, Res2) :- Res2 is Acc2 + 1.
+handleWinner(99, Acc1, Acc2, Acc1, Acc2). % Draw
+```
 
 ## Conclusões
 

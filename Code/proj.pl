@@ -120,9 +120,9 @@ expand(X, Y, StepX, StepY, Board, Player, Piece, Moves) :-
 
 % expand_acc(X, Y, StepX, StepY, Acc, Result)
 expand_acc(0, _, _, _, _, _, _, Acc, Acc).
-expand_acc(11, _, _, _, _, _, _, Acc, Acc).
+expand_acc(Width1, _, _, _, _, _, _, Acc, Acc):- boardWidth(Width), Width1 is Width + 1.
 expand_acc(_, 0, _, _, _, _, _, Acc, Acc).
-expand_acc(_, 11, _, _, _, _, _, Acc, Acc).
+expand_acc(_, Height1, _, _, _, _, _, Acc, Acc):- boardHeight(Height), Height1 is Height + 1.
 expand_acc(X, Y, _, _, Board, _, _, Acc, Acc) :-
     getPiece(X, Y, Board, Piece),
     \+empty(Piece).
@@ -179,7 +179,7 @@ value_simple(Board, Player, Value) :-
     % Evaluate objectives
     getTargetPieces(Board, TargetPieces),
     getPlayerPoints(TargetPieces, Player, 0, Points),
-    % Evaluate Pieces
+    % Evaluate Other Player Pieces
     OtherPlayer is 1 - Player,
     findScaredPieces(Board, OtherPlayer, ScaredOtherPlayer),
     numScaredOnTarget(ScaredOtherPlayer, 0, ScaredOnTarget),
@@ -258,7 +258,7 @@ getTargetPieces(Board, [P1,P2,P3,P4]) :-
     getPiece(X2, Y2, Board, P4).
 
 gameOver(99) :-
-    retract(num_turn(50)), !.
+    retract(num_turn(100)), !.
 
 gameOver(Winner) :-
     retract(num_turn(N)),
@@ -319,7 +319,8 @@ getInput(Mode, X, Y) :-
     getBuffer([Letter|Number]),
     readNumber(Number, YInput),
     letterToIndex(Letter, X),
-    Y is 11 - YInput.
+    boardHeight(Height),
+    Y is Height + 1 - YInput.
 
 getInput(Mode, X, Y) :-
     write('error: Invalid input, try again!'), nl, nl,
@@ -393,7 +394,8 @@ piece_name(P, 'Mouse') :- mouse(P).
 log_pieces([]).
 log_pieces([X-Y-P|T]) :-
     piece_name(P, Name),
-    Y1 is 11 - Y,
+    boardHeight(Height),
+    Y1 is Height + 1 - Y,
     Col is 64 + X,
     write('Position '),
     put_code(Col),
@@ -495,7 +497,7 @@ displayEvaluationTypes(Player) :-
     Aux is Player + 1,
     format('       PLAYER ~d EVALUATION TYPE        ', [Aux]), nl,
     write('1. Simple'), nl,
-    write('2. Complex (Only with default board)'), nl.
+    write('2. Complex'), nl.
 
 getPlayerType(Player) :-
     getBuffer(Input),
