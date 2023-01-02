@@ -532,16 +532,16 @@ getTargetPieces(Board, [P1,P2,P3,P4]) :-
     getPiece(X2, Y2, Board, P4).
 
 /*
-    gameOver(-Winner)
+    game_over(-Winner)
 
     Finish the game
 
     -Winner : Winner
 */
-gameOver(99) :-
+game_over(99) :-
     retract(num_turn(100)), !.
 
-gameOver(Winner) :-
+game_over(Winner) :-
     retract(num_turn(N)),
     N1 is N + 1,
     asserta(num_turn(N1)),
@@ -1421,7 +1421,7 @@ startGame :-
     removeLastPosition(B, Board),
     turn(Board, Player),
     switchPlayer,
-    gameOver(Winner),
+    game_over(Winner),
     isGameOver(Winner),
     displayWinnerMessage(Winner).
 

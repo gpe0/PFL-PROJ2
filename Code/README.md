@@ -140,7 +140,7 @@ Unifica a variável **Num** com o número do turno.
 
 Este predicado foi adicionado devido a um problema relacionado com a natureza do computador greedy.
 
-Ele permite terminar a partida em **Empate** se o número de turnos atingir os 50.
+Ele permite terminar a partida em **Empate** se o número de turnos atingir os 100.
 
 Mostra-se de seguida uma imagem do problema:
 
@@ -160,10 +160,11 @@ Novamente, o jogador é então obrigado a mover o elefante e mais uma vez se ir�
 
 E o rato vai atrás e entra-se num loop da caça do rato ao elefante.
 
-Este problema é muito específico e acontece quando:
+Este problema é **muito específico** e acontece quando se verifica as 4 condições abaixo:
 - Existe um rato nos 4 quadrados centrais
 - Um elefante num objetivo com possibilidade ir para outro objetivo diretamente
 - Não existe nenhum outro movimento de outra peça que permita igualar o valor do tabuleiro
+- O rato não consegue ir para as posições adjacentes sem ser na diagonal dos objetivos (neste caso não pode porque tem um leão de cada lado). Se ele conseguisse ir para essas posições podia na jogada aseguir ir para o objetivo invés de ir outra vez atrás do elefante
 
 De realçar que os movimentos são de facto os melhores e o algoritmo greedy está a se comportar como devia.
 
@@ -171,7 +172,9 @@ De realçar que os movimentos são de facto os melhores e o algoritmo greedy est
 
 - `targetPosition(+X, +Y)`:
 
-Indica as **casas objetivos**
+Verifica se a posição (X,Y) é um **objetivo**
+
+---
 
 ### Visualização do estado de jogo
 
@@ -181,8 +184,9 @@ O predicado principal é:
 
 ```prolog
 display_game(Board) :- 
+    boardHeight(Height),
     drawHeader,
-    drawRowLoop(10, Board),
+    drawRowLoop(Height, Board),
     drawFooter,
     !.
 ```
@@ -274,7 +278,7 @@ Torna mais claro qual a peça que se mexeu no turno.
  ------- 
 ```
 
-Também implementamos uma feature de permite o jogador observar os possíveis movimentos que pode realizar depois de selecionar uma peça. Permite que o utilizador observe movimentos inválidos que possam não ser obvios.
+Também implementamos uma feature que permite o jogador observar os possíveis movimentos que pode realizar depois de selecionar uma peça. Permite que o utilizador observe movimentos inválidos que possam não ser óbvios.
 
 Exemplo complexo de movimentos do elefante na posição `E6`:
 
@@ -302,7 +306,7 @@ Em relação ao input:
 
 - De modo a garantir que o *buffer* ficasse vazio, optamos por ler o *buffer* todo para uma lista através da função **getBuffer(-Input)**
 
-```
+```prolog
 getBuffer([]) :- peek_code(10), get_code(10), !.
 getBuffer([H|T]) :-
     get_code(H),
@@ -313,7 +317,7 @@ getBuffer([H|T]) :-
 
 - Recorremos bastante ao uso da função **readNumber(+Input, -Number)** para ler números
 
-```
+```prolog
 readNumber(L, Res) :- readNumberAux(L, 0, Res).
 
 readNumberAux([], Acc, Acc).
@@ -328,7 +332,7 @@ readNumberAux(_, Acc, Acc).
 
 - Por exemplo, no menu foram usadas as funções **parseBoardDimensions(+Input, -Option)**, **parseBoardPreference(+Input, -Option)**, **parsePlayerType(+Input, -Option)** e **parseEvaluationType(+Input, -Option)**
 
-```
+```prolog
 parsePlayerType(Input, Option) :-
     readNumber(Input, Option),
     Option > 0,
@@ -341,7 +345,7 @@ parsePlayerType(_, _) :-
 
 - Já no jogo, caso o jogador seja um humano, são usadas as funções **readPosition(-X, -Y, -Piece, +Board, +Player, -PossiblePieces)** e **readDestination(-X, -Y, +Moves, -Player)** para ler a peça que o jogador quer movimentar e o destino da mesma, respetivamente.
 
-```
+```prolog
 readPosition(X, Y, Piece, Board, Player, PossiblePieces) :-
     getInput(Player, X, Y),
     getPiece(X, Y, Board, Piece),
@@ -356,7 +360,7 @@ readDestination(X, Y, Moves, Player) :-
 
 - Estas funções recorrem à função **getInput(+Mode, -X, -Y)** para validar o *input*
 
-```
+```prolog
 getInput(Mode, X, Y) :-
     writeStatus(Mode),
     getBuffer([Letter|Number]),
@@ -388,6 +392,7 @@ O turn é responsável por analisar o board e verificar se o jogador tem peças 
 turn(Board, Player) :-
     findScaredPieces(Board, Player, ScaredPieces),
     ScaredPieces  = [_|_],
+    warn_player(Player, ScaredPieces),
     turn_action(Board, Player, ScaredPieces),
     !.
 % Otherwise, play a normal turn
@@ -407,20 +412,20 @@ turn_action(Board, Player, PiecesToMove) :-
 % If Player is Random
 turn_action(Board, Player, PiecesToMove) :-
     playerType(Player, 1),
-    turn_random(Board, Player, PiecesToMove).
+    choose_move(Board, Player, 1, PiecesToMove).
 
 % If Player is Greedy
 turn_action(Board, Player, PiecesToMove) :-
     playerType(Player, 2),
-    turn_greedy(Board, Player, PiecesToMove).
+    choose_move(Board, Player, 2, PiecesToMove).
 
 % If Player is Greedy (MinMax)
 turn_action(Board, Player, PiecesToMove) :-
     playerType(Player, 3),
-    turn_greedy_minmax(Board, Player, PiecesToMove).
+    choose_move(Board, Player, 3, PiecesToMove).
 ```
 
-Por fim tem então a lógica do turno de cada jogador: turn_human, turn_random, turn_greedy, turn_minmax.
+Por fim tem então a lógica do turno de cada jogador: turn_human e o choose_move com o respetivo Level
 
 Iremos analisar o turn_human e os restantes irão ser analisados na Secção **Jogadas do Computador**:
 
@@ -443,7 +448,7 @@ turn_human(Board, Player, PiecesToMove) :-
 
 ### Lista de Jogadas Válidas
 
-Na nossa implementação o predicado `valid_moves` não faz sentido e não seria utilizado. Nós fizemos a lógica do jogo duma forma que a cada turno os predicados recebem as peças que o jogador é **obrigado** a jogar, e baseado nessas peças é que depois calculamos os movimentos válidos.
+Na nossa implementação o predicado `valid_moves` não faz sentido e não seria utilizado. Nós fizemos a lógica do jogo de forma a que cada turno, os predicados recebem as peças que o jogador é **obrigado** a jogar, e baseado nessas peças é que depois calculamos os movimentos válidos.
 
 Optamos por essa solução visto que satisfaz facilmente uma regra do jogo que é: um jogador com peças assustadas, é obrigado a jogar uma delas. Além disso permite uma interface generalizada de turnos.
 
@@ -477,7 +482,7 @@ Para ter um lista limpa de movimentos implementou-se o predicado `flatten` que v
 
 Em relação então ao nosso predicado `getMoves` usado é o seguinte:
 
-```
+```prolog
 getMoves(X, Y, P, Board, Player, Moves) :-
     mouse(P),
     expand_cross(X, Y, Board, Player, P, Moves),
@@ -571,12 +576,17 @@ O final do jogo é detetado verificando se algum jogador possui mais de 2 peças
 O enunciado pede um game_over/2 que recebe o GameState mas sendo que nós guardamos o estado do jogo dinâmicamente o nosso predicado tem aridade 1.
 
 ```prolog
+game_over(99) :-
+    retract(num_turn(100)), !.
+
 game_over(Winner) :-
+    retract(num_turn(N)),
+    N1 is N + 1,
+    asserta(num_turn(N1)),
     board(Board),
     getTargetPieces(Board, Pieces),
     gameOverWinner(Pieces, Winner).
 
-% gameOverWinner(P1, P2, P3, P4, Winner)
 gameOverWinner(Pieces, 1) :-
     getPlayerPoints(Pieces, 0, 0, Points),
     Points > 2,
@@ -591,8 +601,6 @@ gameOverWinner(_,3).
 - `game_over` - Vai buscar o tabuleiro dinâmico (Board) e as peças que estão nas casas objetivo (Pieces) e chama o predicado gameOverWinner
 - `gameOverWinner` - Verifica se pelo menos 3 peças pertencem a um jogador
 
-Separou-se em dois predicados `game_over` e `gameOverWinner` para evitar repetir o cálculo de ir buscar as peças nas casas objetivo.
-
 ### Avaliação do Tabuleiro
 
 Existe dois predicados de avaliação do tabuleiro.
@@ -603,7 +611,7 @@ No início de cada jogo é pedido ao utilizador para indicar o tipo de evaluate 
     <img src="./imgs/menu.png">
 </div>
 
-#### Avaliação "Simple"
+#### Avaliação "Simple" - (predicado "value_simple" em proj.pl)
 
 Este foi o primeiro **evaluate** que fizemos sendo o mais simples.
 
@@ -629,7 +637,7 @@ value_simple(Board, Player, Value) :-
     Value is -100 * Points - 50 * ScaredOnTarget - NumScaredOtherPlayer.
 ```
 
-#### Avaliação "Complex" - Código no ficheiro AI.pl
+#### Avaliação "Complex" - (predicado "value" - código no ficheiro AI.pl)
 
 Esta avaliação continua a ter em consideração o número de pontos do player (apesar de ser calculada de outra forma) e o número de peças do outro player assustadas que é essencial para uma boa jogabilidade.
 
@@ -691,7 +699,7 @@ Pode-se observar abaixo duas imagens onde a primeira corresponde aos pontos do e
     <img src="./imgs/ev_2.png">
 </div>
 
-No `Prolog`, pode-se obter o tabuleiro com os pontos duma peça com os seguintes predicados:
+No `SICStus`, pode-se obter o tabuleiro com os pontos duma peça com os seguintes predicados:
 
 ```prolog
 test_evaluate_elephant.

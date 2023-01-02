@@ -16,7 +16,7 @@ statsGame(Winner) :-
     removeLastPosition(B, NB),
     turn(NB, Player),
     switchPlayer,
-    gameOver(Winner),
+    game_over(Winner),
     isGameOver(Winner),
     !.
 
