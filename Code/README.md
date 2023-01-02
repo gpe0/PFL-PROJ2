@@ -176,6 +176,108 @@ Verifica se a posição (X,Y) é um **objetivo**
 
 ---
 
+### Customização do tabuleiro
+
+Damos ao utilizador a opção de não jogar com o tabuleiro tradicional e permitimos-lhe definir as dimensões do tabuleiro e a posição das casas objetivo.
+
+A definição das dimensões é feita em
+```prolog
+setupCustomBoard :-
+    boardPreference(2),
+    retractall(evaluationType(Player, _)),
+    asserta(evaluationType(Player, 0)),
+    readBoardDimensions,
+    setupEmptyBoard.
+```
+Caso o utilizador escolha definir o seu próprio tabuleiro, a opção de avaliação complexa é eliminada, por recorrer a uma classificação pré-definida de cada casa do tabuleiro 10x10.
+
+As dimensões são recolhidas do user em readBoardDimensions tem de ser pares e maiores que 8 (para preservar a geometria do tabuleiro) e menores que 26, por haver 26 letras no alfabeto. São depois guardadas com os predicados boardWidth(Width) e boardHeight(Height).
+
+Em setupEmptyBoard é criado uma matriz sem peças colocadas através do predicado:
+```prolog
+setupEmptyBoard :-
+    boardWidth(Width),
+    boardHeight(Height),
+    length(Row, Width),
+    maplist(=(0), Row),
+    length(Board, Height),
+    maplist(=(Row), Board),
+    setBoard(Board).
+```
+
+No caso de o utilizador decidir usar o tabuleiro tradicional, nesta fase é criado um tabuleiro de 10x10 vazio.
+
+```prolog
+setupCustomBoard :-
+    boardPreference(1),
+    retractall(boardHeight(_)),
+    asserta(boardHeight(10)),
+    retractall(boardWidth(_)),
+    asserta(boardWidth(10)),
+    setupEmptyBoard.
+```
+
+Antes de preencher o tabuleiro é necessário decidir onde colocar as casas objetivo. A geometria destas casas é preservada (servem como os cantos de um quadrado no centro do tabuleiro). Elas não podem estar mesmo no centro, nem nas duas linhas que incluem peças. É pedida ao utilizador a distância delas ao centro (na diagonal) e guardada no predicado targetDistance(Distance). No caso de o utilizador não estar interessado em customizar a sua posição, é definida a distância default de targetDistance(1).
+
+O tabuleiro é preenchido com o predicado:
+
+```prolog
+fillBoard :-
+    board(Board),
+    boardWidth(Width),
+    boardHeight(Height),
+    targetDistance(Distance),    
+    setTargetPositionLoop(Distance, Height, Width, Board, NewBoard),
+    setDefaultPieces(NewBoard, NewerBoard),
+    setBoard(NewerBoard).
+```
+
+As casas objetivo são definidas em setTargetPositionLoop:
+```prolog
+setTargetPositionLoop(Distance, Height, Width, Board, NewBoard) :-
+    X is div(Width, 2) - Distance,
+    Y is div(Height, 2) - Distance,
+    retractall(targetPosition(_,_)),
+    setTargetPosition(X,Y, Board, TempBoard1),
+    X1 is X + 1 + 2 * Distance,
+    setTargetPosition(X1,Y, TempBoard1, TempBoard2),
+    Y1 is Y + 1 + 2 * Distance,
+    setTargetPosition(X,Y1, TempBoard2, TempBoard3),
+    setTargetPosition(X1,Y1, TempBoard3, NewBoard).
+
+setTargetPosition(X, Y, Board, NewBoard) :-
+    nth1(Y, Board, Row, RestBoard),
+    nth1(X, Row, _, RestRow),
+    nth1(X, ModifiedRow, 7, RestRow),
+    nth1(Y, NewBoard, ModifiedRow, RestBoard),
+    asserta(targetPosition(X, Y)).
+```
+
+A sua posição é depois guardada em targetPosition(X, Y). Já as peças normais, que nunca são alteradas, são colocadas (de forma exaustiva) em jogo no predicado setDefaultPieces:
+
+```prolog
+setDefaultPieces(Board, NewBoard) :-
+    boardHeight(Height),
+    boardWidth(Width),
+    X2 is div(Width, 2),
+    X1 is X2 - 1,
+    X3 is X2 + 1,
+    X4 is X3 + 1,
+    Y1 is Height - 1,
+    setPiece(X2, Height, Board, 4, TempBoard1),
+    setPiece(X3, Height, TempBoard1, 4, TempBoard2),
+    setPiece(X1, Y1, TempBoard2, 6, TempBoard3),
+    setPiece(X2, Y1, TempBoard3, 5, TempBoard4),
+    setPiece(X3, Y1, TempBoard4, 5, TempBoard5),
+    setPiece(X4, Y1, TempBoard5, 6, TempBoard6),
+    setPiece(X2, 1, TempBoard6, 1, TempBoard7),
+    setPiece(X3, 1, TempBoard7, 1, TempBoard8),
+    setPiece(X1, 2, TempBoard8, 3, TempBoard9),
+    setPiece(X2, 2, TempBoard9, 2, TempBoard10),
+    setPiece(X3, 2, TempBoard10, 2, TempBoard11),
+    setPiece(X4, 2, TempBoard11, 3, NewBoard).
+```
+
 ### Visualização do estado de jogo
 
 O código relacionado com a visualização do estado do jogo está no ficheiro `view.pl`.
@@ -820,6 +922,16 @@ handleWinner(99, Acc1, Acc2, Acc1, Acc2). % Draw
 ```
 
 ## Conclusões
+
+Pensamos que fizemos um projeto interessante e bastante completo. Destacamos o nosso AI, que utiliza alpha-beta prunning, a nossa avaliação "complexa" que avalia a posição das peças no tabuleiro e a versatilidade e aspeto da interface. Mas há sempre aspetos a ser melhorados.
+
+Para começar, a avaliação "complexa" não está disponível para boards com dimensões customizadas. Isto podia ser evitado se o mapa de valores das posições para cada peça, em vez de ser estático, fosse gerado sempre que um board é criado.
+
+As condições de empate também podiam ser alteradas: em vez de o jogo acabar ao fim de 100 jogadas, poderiamos utilizar a condição do xadrez: o jogo empata depois de a mesma sequência de jogadas ser repetida 3 vezes. Isto exigiria que nós acompanhassemos as jogadas que foram feitas, o que não acontece de momento.
+
+Seria também interessante ter mais opções de customização: por exemplo poderia ser possível escolher o número de peças e as suas posições quando se cria um board novo.
+
+Finalmente, a profundidade do bot minmax pode sempre ser aumentada e o algoritmo tornado mais eficiente.
 
 ## Bibliografia
 

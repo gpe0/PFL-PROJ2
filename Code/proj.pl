@@ -1308,11 +1308,11 @@ readBoardHeight :-
 displayBoardWidth :-
     write('       BOARD DIMENSIONS        '), nl,
     write('Please choose a width for your board'), nl,
-    write('Note that the width must be even between 8 and 26'), nl.
+    write('Note that the width must be an even number between 8 and 26'), nl.
 
 displayBoardHeight :-
     write('Please choose a height for your board'), nl,
-    write('Note that the height must be even between 8 and 26'), nl.
+    write('Note that the height must be an even number between 8 and 26'), nl.
 
 % Gets the board dimensions
 getBoardWidth :-
